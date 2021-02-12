@@ -1,0 +1,10 @@
+numpy
+pandas
+sklearn
+seaborn
+matplotlib
+tensorflow-gpu
+tensorflow==2.3.0
+gdown
+transformers==4.2.2
+efficientnet
