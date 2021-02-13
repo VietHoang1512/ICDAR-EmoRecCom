@@ -132,6 +132,11 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+
+def extract_fold_number(file_path):
+    return int(re.findall("(\d)\.h5", file_path)[0])
+
+
 if __name__ == "__main__":
     seed_all(seed=args.seed)
     print_signature()
@@ -239,7 +244,7 @@ if __name__ == "__main__":
             )
             reduce_lr = tf.keras.callbacks.LearningRateScheduler(scheduler)
 
-            model_dir = os.path.join(OUTPUT_DIR, f"Fold_{fold+1}.h5")
+            model_dir = os.path.join(OUTPUT_DIR, f"Fold_{fold}.h5")
 
             sv = tf.keras.callbacks.ModelCheckpoint(
                 model_dir,
@@ -289,6 +294,7 @@ if __name__ == "__main__":
             for k, v in history.history.items():
                 logger.info(f"{k} : {v}")
             folds_history.append(history.history)
+
     if args.do_infer:
         logger.info("Start inference")
         test_dataset = ICDARGenerator(
@@ -303,14 +309,34 @@ if __name__ == "__main__":
         )
 
         preds = []
+        oof_preds = []
         for i, file_path in enumerate(glob(f"{OUTPUT_DIR}/*.h5")):
             K.clear_session()
             logger.info(f"Inferencing with model from: {file_path}")
+            fold = extract_fold_number(file_path)
+            val_df = train_processed[train_processed["fold"] == fold].copy()
+            val_dataset = ICDARGenerator(
+                df=val_df,
+                multimodal=MULTIMODAL,
+                bert_tokenizer=bert_tokenizer,
+                shuffle=False,
+                batch_size=1,
+                image_size=args.img_size,
+                target_cols=TARGET_COLS,
+                max_len=args.max_len,
+            )
             model.load_weights(file_path)
             pred = model.predict(test_dataset, verbose=1)
+            oof_pred = model.predict(val_dataset, verbose=1)
             preds.append(pred)
-
+            val_df[TARGET_COLS] = oof_pred
+            oof_preds.append(val_df)
         pred = np.mean(preds, axis=0)
         test_processed[TARGET_COLS] = pred
         result_path = os.path.join(OUTPUT_DIR, "results.csv")
         test_processed[["image_id"] + TARGET_COLS].to_csv(result_path, header=False)
+        test_path = os.path.join(OUTPUT_DIR, "test_pred.csv")
+        test_processed.to_csv(test_path, index=False)
+        oof_path = os.path.join(OUTPUT_DIR, "test_pred.csv")
+        oof_df = pd.DataFrame.sort_index(pd.concat(oof_preds, axis=0))
+        oof_df.to_csv(oof_path, index=False)
