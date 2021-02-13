@@ -45,15 +45,13 @@ parser.add_argument(
 
 parser.add_argument(
     "--do_train",
-    default=True,
-    type=bool,
+    action="store_true",
     help="whether train the pretrained model with provided train data",
 )
 
 parser.add_argument(
     "--do_infer",
-    default=True,
-    type=bool,
+    action="store_true",
     help="whether predict the pretrained model with provided test data",
 )
 
@@ -87,8 +85,7 @@ parser.add_argument(
 
 parser.add_argument(
     "--lower",
-    default=True,
-    type=bool,
+    action="store_true",
     help="whether lowercase text or not",
 )
 
@@ -122,8 +119,7 @@ parser.add_argument(
 
 parser.add_argument(
     "--kaggle",
-    default=False,
-    type=bool,
+    action="store_true",
     help="whether using kaggle environment or not",
 )
 
@@ -141,7 +137,7 @@ if __name__ == "__main__":
     print_signature()
 
     # setup working directory
-    experiment = f"{args.img_model}_{args.bert_model}_{args.max_len}"
+    experiment = f"{args.img_model}_{args.img_size}_{args.bert_model}_{args.max_len}"
     OUTPUT_DIR = os.path.join(OUTPUT_DIR, experiment)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
