@@ -1,3 +1,8 @@
+"""
+    Data processing module
+"""
+
+
 import math
 import os
 import re
@@ -22,7 +27,7 @@ def process_emotion_polarity(df, prefix="prob_"):
     return df
 
 
-def process_dialog(df, text_separator=" "):
+def process_dialog(df, lower=True, text_separator=" "):
     def text_normalize(text):
         text = re.sub(" +", " ", text)
         text = re.sub(" ' s", "'s", text)
@@ -40,6 +45,8 @@ def process_dialog(df, text_separator=" "):
         text = re.sub("in ' ", "ing ", text)
         text = re.sub(" +", " ", text)
         text = text.strip()
+        if lower:
+            text = text.lower()
         return text
 
     def join_conversation(conversation):

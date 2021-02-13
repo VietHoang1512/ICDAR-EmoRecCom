@@ -1,3 +1,7 @@
+"""
+    EmoRecCom model
+"""
+
 import efficientnet.keras as efn
 import tensorflow as tf
 from transformers import TFAutoModel

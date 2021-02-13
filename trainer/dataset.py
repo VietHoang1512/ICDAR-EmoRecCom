@@ -1,3 +1,8 @@
+"""
+    Main data generator class
+"""
+
+
 import numpy as np
 import tensorflow as tf
 

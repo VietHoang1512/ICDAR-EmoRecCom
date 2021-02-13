@@ -1,3 +1,7 @@
+"""
+    K-fold split data for comparation
+"""
+
 import pandas as pd
 from sklearn.model_selection import KFold
 

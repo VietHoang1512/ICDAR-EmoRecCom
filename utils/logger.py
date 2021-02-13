@@ -1,3 +1,7 @@
+"""
+    Custom logger class (handle both console and file output)
+"""
+
 import logging
 import logging.handlers
 import os

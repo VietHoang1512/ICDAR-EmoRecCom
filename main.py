@@ -86,6 +86,20 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--lower",
+    default=True,
+    type=bool,
+    help="whether lowercase text or not",
+)
+
+parser.add_argument(
+    "--text_separator",
+    default=" ",
+    type=str,
+    help="define separator to join conversations",
+)
+
+parser.add_argument(
     "--n_hiddens",
     default=-1,
     type=int,
@@ -179,9 +193,15 @@ if __name__ == "__main__":
     test_non_processed = pd.merge(sample_submission, test_script, on="image_id")
 
     train_processed = process_dialog(
-        process_emotion_polarity(add_file_path(df=train_non_processed, img_dir=TRAIN_IMG_DIR, gcs_ds_path=GCS_DS_PATH))
+        process_emotion_polarity(add_file_path(df=train_non_processed, img_dir=TRAIN_IMG_DIR, gcs_ds_path=GCS_DS_PATH)),
+        lower=args.lower,
+        text_separator=args.text_separator,
     )
-    test_processed = process_dialog(add_file_path(df=test_non_processed, img_dir=TEST_IMG_DIR, gcs_ds_path=GCS_DS_PATH))
+    test_processed = process_dialog(
+        add_file_path(df=test_non_processed, img_dir=TEST_IMG_DIR, gcs_ds_path=GCS_DS_PATH),
+        lower=args.lower,
+        text_separator=args.text_separator,
+    )
 
     # for data analysis purpose
     with open("train.txt", "w") as f:
@@ -208,8 +228,8 @@ if __name__ == "__main__":
         folds_history = []
         folds = train_processed["fold"].unique()
         for fold in sorted(folds):
-            print("*" * 100)
-            print(f"FOLD: {fold+1}/{len(folds)}")
+            logger.info("*" * 100)
+            logger.info(f"FOLD: {fold+1}/{len(folds)}")
             K.clear_session()
             #     with strategy.scope():
             #         model = build_model()
@@ -270,6 +290,8 @@ if __name__ == "__main__":
                 epochs=args.n_epochs,
                 #         verbose = 1
             )
+            for k, v in history.history.items():
+                logger.info(f"{k} : {v}")
             folds_history.append(history.history)
     if args.do_infer:
         logger.info("Start inference")
@@ -285,14 +307,10 @@ if __name__ == "__main__":
         )
 
         preds = []
-        for i, file_name in enumerate(glob(f"{OUTPUT_DIR}/*.h5")):
-            print("*" * 100)
+        for i, file_path in enumerate(glob(f"{OUTPUT_DIR}/*.h5")):
             K.clear_session()
-            model_path = os.path.join(OUTPUT_DIR, file_name)
-
-            print(f"Inferencing with model from: {model_path}")
-            model.load_weights(model_path)
-
+            logger.info(f"Inferencing with model from: {file_path}")
+            model.load_weights(file_path)
             pred = model.predict(test_dataset, verbose=1)
             preds.append(pred)
 

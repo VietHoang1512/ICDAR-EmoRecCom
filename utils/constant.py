@@ -1,5 +1,5 @@
 """
-    This file contain the data directory structure and format
+    This file contain the data directory structure and file's format
     https://drive.google.com/file/d/1OUd7dQybiioKMu7NXtWxIITdun8SaaUX/view
 """
 
