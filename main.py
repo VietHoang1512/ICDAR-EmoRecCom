@@ -59,14 +59,14 @@ parser.add_argument(
     "--img_model",
     default="efn_b0",
     type=str,
-    help="pretrained image model name",
+    help=f"pretrained image model name in list \n {IMAGE_MODELS} \n None for using unimodal model",
 )
 
 parser.add_argument(
     "--bert_model",
     default="roberta-base",
     type=str,
-    help="path to pretrained bert model path or directory",
+    help="path to pretrained bert model path or directory (e.g: https://huggingface.co/models)",
 )
 
 parser.add_argument(
@@ -104,8 +104,15 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--lr",
+    default=3e-5,
+    type=float,
+    help="Learning rate",
+)
+
+parser.add_argument(
     "--batch_size",
-    default=4,
+    default=32,
     type=int,
     help="num examples per batch",
 )
@@ -133,7 +140,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def extract_fold_number(file_path):
+def extract_fold_number(file_path: str) -> str:
     return int(re.findall("(\d)\.h5", file_path)[0])
 
 
@@ -142,7 +149,7 @@ if __name__ == "__main__":
     print_signature()
 
     # setup working directory
-    experiment = f"{args.img_model}_{args.img_size}_{args.bert_model}_{args.max_len}"
+    experiment = f"{args.img_model}_{args.img_size}_{args.bert_model}_{args.max_len}_{args.n_hiddens}"
     OUTPUT_DIR = os.path.join(OUTPUT_DIR, experiment)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -173,6 +180,11 @@ if __name__ == "__main__":
     TARGET_COLS = args.target_cols
     TARGET_SIZE = len(TARGET_COLS)
     MULTIMODAL = args.img_model in IMAGE_MODELS
+
+    if not MULTIMODAL and args.img_model:
+        raise NotImplementedError(
+            f"{args.img_model} is not available, please choose one of the following model\n {IMAGE_MODELS}"
+        )
 
     train_polarity = pd.read_csv(TRAIN_POLARITY, index_col=0)
     train_labels = pd.read_csv(TRAIN_LABELS, index_col=0)
@@ -241,6 +253,11 @@ if __name__ == "__main__":
                 max_len=args.max_len,
                 target_size=TARGET_SIZE,
                 n_hiddens=args.n_hiddens,
+            )
+            model.compile(
+                tf.keras.optimizers.Adam(lr=args.lr),
+                loss="binary_crossentropy",
+                metrics=[tf.keras.metrics.AUC(multi_label=TARGET_SIZE > 1)],
             )
             reduce_lr = tf.keras.callbacks.LearningRateScheduler(scheduler)
 

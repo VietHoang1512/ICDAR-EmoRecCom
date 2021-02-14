@@ -7,7 +7,7 @@ import tensorflow as tf
 from transformers import TFAutoModel
 
 
-def get_img_model(img_model):
+def get_img_model(img_model: str):
     models_dict = {
         "efn_b0": efn.EfficientNetB0(include_top=False, weights="noisy-student"),
         "efn_b1": efn.EfficientNetB1(include_top=False, weights="noisy-student"),
@@ -26,6 +26,7 @@ def build_model(img_model, bert_model, image_size, max_len, target_size, n_hidde
     """
     ICDAR multimodal model for mixed image and dialog data
     NOTE : https://arxiv.org/pdf/1905.12681.pdf
+
     """
 
     # Efficient Net pretrained model
@@ -82,11 +83,5 @@ def build_model(img_model, bert_model, image_size, max_len, target_size, n_hidde
         inputs = [bert_input_word_ids, bert_attention_mask, bert_token_type_ids]
 
     model = tf.keras.models.Model(inputs=inputs, outputs=out)
-
-    model.compile(
-        tf.keras.optimizers.Adam(lr=3e-5),
-        loss="binary_crossentropy",
-        metrics=[tf.keras.metrics.AUC(multi_label=target_size > 1)],
-    )
 
     return model

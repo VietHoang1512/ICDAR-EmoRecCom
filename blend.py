@@ -46,13 +46,16 @@ def extract_column(column_name):
     return column_name.split("_")[-1]
 
 
+N_FOLDS = 5
 multi_auc_scores = []
 for target_col in ALL_COLS:
     print("BLENDING ON COLUMNS", target_col)
-    oof_pred_df_single = oof_pred_df[[col for col in oof_pred_df.columns if extract_column(col) == target_col]]
-    test_pred_df_single = test_pred_df[[col for col in test_pred_df.columns if extract_column(col) == target_col]]
-    n_folds = 5
-    kf = KFold(n_splits=n_folds, shuffle=True, random_state=0)
+    oof_pred_df_single = oof_pred_df.copy()[[col for col in oof_pred_df.columns if extract_column(col) == target_col]]
+    test_pred_df_single = test_pred_df.copy()[
+        [col for col in test_pred_df.columns if extract_column(col) == target_col]
+    ]
+
+    kf = KFold(n_splits=N_FOLDS, shuffle=True, random_state=0)
     test_preds = []
     oof_scores = []
     for fold_id, (train_idx, val_idx) in enumerate(kf.split(oof_df)):
@@ -68,10 +71,11 @@ for target_col in ALL_COLS:
         test_preds.append(test_pred)
         oof_score = roc_auc_score(y_val, val_pred)
         oof_scores.append(oof_score)
-        print(f"FOLD {fold_id} {oof_score}")
+        # print(f"FOLD {fold_id} {oof_score}")
     target_column_score = np.mean(oof_scores)
     print("TARGET COLUMN SCORE: ", target_column_score)
     multi_auc_scores.append(target_column_score)
     test_pred = np.mean(test_preds, axis=0)
     test_df[target_col] = test_pred
 print("OVERALL SCORE", np.mean(multi_auc_scores))
+test_processed[["image_id"] + TARGET_COLS].to_csv("results.csv", header=False)
