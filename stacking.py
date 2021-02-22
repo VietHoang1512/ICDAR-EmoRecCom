@@ -8,7 +8,7 @@ from sklearn.model_selection import KFold
 
 from utils.constant import *
 
-STACKING_DIR = "data/stacking"
+STACKING_DIR = OUTPUT_DIR
 N_FOLDS = 5
 oof_df = pd.read_csv("data/train_5_folds.csv", index_col=0)
 test_df = pd.read_csv("data/results.csv", index_col=0, header=None, names=["image_id"] + ALL_COLS)
@@ -23,7 +23,7 @@ EXPERIMENTS = [
     "efn_b5_128_distilbert-base-uncased_48",
     "efn_b5_128_roberta-base_64",
     "efn_b5_128_bert-base-uncased_48",
-]
+]  # os.listdir(STACKING_DIR)
 
 for exp in EXPERIMENTS:
     oof_pred_fp = os.path.join(STACKING_DIR, exp, "oof_pred.npy")

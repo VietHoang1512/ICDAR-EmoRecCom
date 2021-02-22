@@ -4,6 +4,8 @@ sklearn
 seaborn
 matplotlib
 tensorflow-gpu
+pydot
+graphviz
 gdown
 transformers==3.5.0
 efficientnet

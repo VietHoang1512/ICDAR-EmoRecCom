@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import re
 from glob import glob
 
 import numpy as np
@@ -25,7 +26,7 @@ from utils.signature import print_signature
 print("Using Tensorflow version:", tf.__version__)
 print("Using Transformers version:", transformers.__version__)
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 parser = argparse.ArgumentParser()
 
@@ -54,6 +55,14 @@ parser.add_argument(
     action="store_true",
     help="whether predict the pretrained model with provided test data",
 )
+
+parser.add_argument(
+    "--ckpt_dir",
+    type=str,
+    default="outputs/efn_b0_64_roberta-base_32_-1",
+    help="path to the directory containing checkpoints (.h5) models",
+)
+
 
 parser.add_argument(
     "--img_model",
@@ -152,7 +161,7 @@ if __name__ == "__main__":
     experiment = f"{args.img_model}_{args.img_size}_{args.bert_model}_{args.max_len}_{args.n_hiddens}"
     OUTPUT_DIR = os.path.join(OUTPUT_DIR, experiment)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-
+    args.ckpt_dir = OUTPUT_DIR
     logger = custom_logger(logging_dir=OUTPUT_DIR)
 
     config_info = "\n" + "*" * 50 + "\nGLOBAL CONFIGURATION\n"
@@ -338,7 +347,15 @@ if __name__ == "__main__":
 
         preds = []
         oof_preds = []
-        for i, file_path in enumerate(glob(f"{OUTPUT_DIR}/*.h5")):
+        model = build_model(
+            img_model=args.img_model,
+            bert_model=args.bert_model,
+            image_size=args.img_size,
+            max_len=args.max_len,
+            target_size=TARGET_SIZE,
+            n_hiddens=args.n_hiddens,
+        )
+        for i, file_path in enumerate(glob(f"{args.ckpt_dir}/*.h5")):
             K.clear_session()
             logger.info(f"Inferencing with model from: {file_path}")
             fold = extract_fold_number(file_path)
@@ -361,10 +378,15 @@ if __name__ == "__main__":
             oof_preds.append(val_df)
         pred = np.mean(preds, axis=0)
         test_processed[TARGET_COLS] = pred
-        result_path = os.path.join(OUTPUT_DIR, "results.csv")
+        result_path = os.path.join(args.ckpt_dir, "results.csv")
         test_processed[["image_id"] + TARGET_COLS].to_csv(result_path, header=False)
-        test_path = os.path.join(OUTPUT_DIR, "test_pred.csv")
-        test_processed.to_csv(test_path, index=False)
-        oof_path = os.path.join(OUTPUT_DIR, "test_pred.csv")
+
+        # save prediction for stacking
+        test_path = os.path.join(args.ckpt_dir, "test_pred.npy")
+        with open(test_path, "wb") as f:
+            np.save(f, test_processed[TARGET_COLS].values)
+
+        oof_path = os.path.join(args.ckpt_dir, "oof_pred.npy")
         oof_df = pd.DataFrame.sort_index(pd.concat(oof_preds, axis=0))
-        oof_df.to_csv(oof_path, index=False)
+        with open(oof_path, "wb") as f:
+            np.save(f, oof_df[TARGET_COLS].values)
