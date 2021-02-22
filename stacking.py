@@ -8,7 +8,8 @@ from sklearn.model_selection import KFold
 
 from utils.constant import *
 
-BLEND_DIR = "data/blend"
+STACKING_DIR = "data/stacking"
+N_FOLDS = 5
 oof_df = pd.read_csv("data/train_5_folds.csv", index_col=0)
 test_df = pd.read_csv("data/results.csv", index_col=0, header=None, names=["image_id"] + ALL_COLS)
 
@@ -25,8 +26,8 @@ EXPERIMENTS = [
 ]
 
 for exp in EXPERIMENTS:
-    oof_pred_fp = os.path.join(BLEND_DIR, exp, "oof_pred.npy")
-    test_pred_fp = os.path.join(BLEND_DIR, exp, "test_pred.npy")
+    oof_pred_fp = os.path.join(STACKING_DIR, exp, "oof_pred.npy")
+    test_pred_fp = os.path.join(STACKING_DIR, exp, "test_pred.npy")
     oof_pred = np.load(oof_pred_fp)
     test_pred = np.load(test_pred_fp)
     oof_pred_df = oof_df.copy()[ALL_COLS]
@@ -46,10 +47,9 @@ def extract_column(column_name):
     return column_name.split("_")[-1]
 
 
-N_FOLDS = 5
 multi_auc_scores = []
 for target_col in ALL_COLS:
-    print("BLENDING ON COLUMNS", target_col)
+    print("PREDICTING COLUMN:", target_col)
     oof_pred_df_single = oof_pred_df.copy()[[col for col in oof_pred_df.columns if extract_column(col) == target_col]]
     test_pred_df_single = test_pred_df.copy()[
         [col for col in test_pred_df.columns if extract_column(col) == target_col]
@@ -78,4 +78,4 @@ for target_col in ALL_COLS:
     test_pred = np.mean(test_preds, axis=0)
     test_df[target_col] = test_pred
 print("OVERALL SCORE", np.mean(multi_auc_scores))
-test_processed[["image_id"] + TARGET_COLS].to_csv("results.csv", header=False)
+test_df[["image_id"] + ALL_COLS].to_csv("results.csv", header=False)

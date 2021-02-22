@@ -22,7 +22,6 @@ def get_img_model(img_model: str):
 
 
 def build_model(img_model, bert_model, image_size, max_len, target_size, n_hiddens):
-
     """
     ICDAR multimodal model for mixed image and dialog data
     NOTE : https://arxiv.org/pdf/1905.12681.pdf
@@ -53,17 +52,21 @@ def build_model(img_model, bert_model, image_size, max_len, target_size, n_hidde
         output_hidden_states=True,
         output_attentions=True,
     )
+    """
+    bert_sequence_output = (last_hidden_state (batch_size, sequence_length, hidden_size),
+                            pooler_output (batch_size, hidden_size),
+                            hidden_states (batch_size, sequence_length, hidden_size),
+                            attentions (batch_size, num_heads, sequence_length, sequence_length)
+                            )
+    """
     if n_hiddens == -1:  # get [CLS] token embedding only
-        print("Get pooler output of shape (batch_size, hidden_size)")
         bert_sequence_output = bert_sequence_output[0][:, 0, :]
+        # bert_sequence_output = bert_sequence_output[1]
     else:  # concatenate n_hiddens final layer
-        print(f"Concatenate {n_hiddens} hidden_states of shape (batch_size, hidden_size)")
         bert_sequence_output = tf.concat([bert_sequence_output[2][-i] for i in range(n_hiddens)], axis=-1)
         bert_sequence_output = bert_sequence_output[:, 0, :]
 
     # TODO: implement multimodal model training strategy
-
-    ##################################
     # img_final = tf.keras.layers.Dense(target_size, activation="sigmoid")(img_pooled)
     # bert_final = tf.keras.layers.Dense(target_size, activation="sigmoid")(bert_sequence_output)
     if img_model:
@@ -71,12 +74,7 @@ def build_model(img_model, bert_model, image_size, max_len, target_size, n_hidde
         out = tf.keras.layers.Dense(target_size, activation="sigmoid")(out)
     else:
         out = tf.keras.layers.Dense(target_size, activation="sigmoid")(bert_sequence_output)
-    ##################################
-    # img_output = tf.keras.layers.Dense(8, activation="relu")(img_pooled)
-    # bert_output = tf.keras.layers.Dense(8, activation="relu")(bert_sequence_output)
-    # out = tf.keras.layers.Concatenate()([img_output, bert_output])
-    # out = tf.keras.layers.Dense(target_size, activation="sigmoid")(out)
-    ##################################
+
     if img_model:
         inputs = [img_input, bert_input_word_ids, bert_attention_mask, bert_token_type_ids]
     else:

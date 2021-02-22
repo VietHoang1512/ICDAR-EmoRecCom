@@ -4,6 +4,7 @@
 **.logs 
 test.txt
 train.txt
+*.csv
 
 # data
 **/data
@@ -141,6 +142,7 @@ dmypy.json
 .pyre/
 *.swp
 debug/
+
 # data/
 .idea/
 *.png

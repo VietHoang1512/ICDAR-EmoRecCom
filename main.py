@@ -218,9 +218,20 @@ if __name__ == "__main__":
 
     # for data analysis purpose
     with open("train.txt", "w") as f:
-        f.write("\n".join(train_processed["text"]))
+        for index, row in train_processed.iterrows():
+            f.write(f"\n{index} {row['image_id']} \n")
+            for col in ALL_COLS:
+                f.write(f"{col} {row[col]} | ")
+            f.write(f"\nText: {row['text']}\n")
+            f.write(f"Narration {row['narration']}\n")
+
     with open("test.txt", "w") as f:
-        f.write("\n".join(test_processed["text"]))
+        for index, row in test_processed.iterrows():
+            f.write(f"\n{index} {row['image_id']} \n")
+            for col in ALL_COLS:
+                f.write(f"{col} {row[col]} | ")
+            f.write(f"\nText: {row['text']}\n")
+            f.write(f"Narration {row['narration']}\n")
 
     strategy = select_strategy()
 
