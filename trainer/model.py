@@ -8,6 +8,15 @@ from transformers import TFAutoModel
 
 
 def get_img_model(img_model: str):
+    """
+    Get Keras image model by name
+
+    Args:
+        img_model (str): Pretrained image model name
+
+    Returns:
+        tf.keras.Model: Pretrained image model
+    """
     models_dict = {
         "efn_b0": efn.EfficientNetB0(include_top=False, weights="noisy-student"),
         "efn_b1": efn.EfficientNetB1(include_top=False, weights="noisy-student"),

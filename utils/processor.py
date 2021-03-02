@@ -15,6 +15,16 @@ tqdm.pandas()
 
 
 def process_emotion_polarity(df, prefix="prob_"):
+    """
+    Exploding the emotion column of data
+
+    Args:
+        df (DataFrame): data
+        prefix (str, optional): prefix of exploded columns. Defaults to "prob_".
+
+    Returns:
+        DataFrame: Processed dataframe
+    """
     df = df.copy()
     for emotion in EMOTIONS:
         df[prefix + emotion] = 0
@@ -28,7 +38,25 @@ def process_emotion_polarity(df, prefix="prob_"):
 
 
 def process_dialog(df, lower=True, text_separator=" "):
-    def text_normalize(text):
+    """
+    Simple dialog processing
+
+    Args:
+        df (DataFrame): data
+        lower (bool, optional): whether lowercasing the text. Defaults to True.
+        text_separator (str, optional): separator used in joining conversations. Defaults to " ".
+    """
+
+    def text_normalize(text: str):
+        """
+        Simple text pre-processing
+
+        Args:
+            text (str): raw text
+
+        Returns:
+            str: processed text
+        """
         text = re.sub(" +", " ", text)
         text = re.sub(" ' s", "'s", text)
         text = re.sub("n ' t", "n't ", text)
@@ -50,6 +78,14 @@ def process_dialog(df, lower=True, text_separator=" "):
         return text
 
     def join_conversation(conversation):
+        """
+        Join conversations with text separator
+        Args:
+            conversation (list): dialogues in a comic frame
+
+        Returns:
+            str: a single paragraph
+        """
         # TODO: handle missing values
         conversation = [item for item in conversation if (isinstance(item, str) or not math.isnan(item))]
         text = text_separator.join(conversation)
@@ -64,6 +100,17 @@ def process_dialog(df, lower=True, text_separator=" "):
 
 
 def add_file_path(df, img_dir, gcs_ds_path):
+    """
+    Add file path to image filenames
+
+    Args:
+        df (DataFrame): data
+        img_dir (str): path to the images directory
+        gcs_ds_path (str): path to the GCP bucket # FIXME
+
+    Returns:
+        str: data with the image file paths
+    """
     if gcs_ds_path:
         img_dir = os.path.join(gcs_ds_path, os.path.basename(img_dir))
 

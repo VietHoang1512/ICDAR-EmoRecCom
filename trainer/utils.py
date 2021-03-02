@@ -8,6 +8,13 @@ import tensorflow as tf
 
 
 def select_strategy():
+    """
+    Auto select device to run in (TPU or GPU)
+    Restrict reserving all GPU RAM in tensorflow
+
+    Returns:
+        stragegy: strategy for training
+    """
     try:
         tpu = tf.distribute.cluster_resolver.TPUClusterResolver()
         tf.config.experimental_connect_to_cluster(tpu)
@@ -31,6 +38,12 @@ def select_strategy():
 
 
 def length_plot(lengths):
+    """
+    Plot the sequence length statistic
+
+    Args:
+        lengths (list): Sequence lengths (by word or character)
+    """
     plt.figure(figsize=(15, 9))
     textstr = f" Mean: {np.mean(lengths):.2f} \u00B1 {np.std(lengths):.2f} \n Max: {np.max(lengths)}"
     props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
@@ -41,6 +54,12 @@ def length_plot(lengths):
 
 
 def seed_all(seed=1512):
+    """
+    Set seed for reproducing result
+
+    Args:
+        seed (int, optional): seed number. Defaults to 1512.
+    """
     np.random.seed(seed)
     random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
@@ -49,4 +68,13 @@ def seed_all(seed=1512):
 
 
 def scheduler(epoch):
+    """
+    Learning rate scheduler by epoch
+
+    Args:
+        epoch (int): Epoch number
+
+    Returns:
+        float: learning rate in epochs
+    """
     return 3e-5 * 0.2 ** epoch

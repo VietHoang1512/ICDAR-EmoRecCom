@@ -7,6 +7,16 @@ from sklearn.model_selection import KFold
 
 
 def kfold_split(train_df, n_folds):
+    """
+    K-fold split data for further comparation
+
+    Args:
+        train_df (DataFrame): train dataframe
+        n_folds (int): number of fold
+
+    Returns:
+        DataFrame: data with fold idices
+    """
     train_df = train_df.copy()
     train_df["fold"] = 0
     kf = KFold(n_splits=n_folds, shuffle=True, random_state=0)

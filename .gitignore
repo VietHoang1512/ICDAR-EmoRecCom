@@ -5,6 +5,7 @@
 test.txt
 train.txt
 *.csv
+test.py
 
 # data
 **/data

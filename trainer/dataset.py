@@ -22,6 +22,19 @@ class ICDARGenerator(tf.keras.utils.Sequence):
         target_cols,
         max_len,
     ):
+        """
+        ICDAR dataset constructor
+
+        Args:
+            df (DataFrame): Processed dataframe, including image paths and dialogues
+            multimodal (bool): whether generating image features or not # FIXME
+            bert_tokenizer (AutoTokenizer): transformer's tokenizer class
+            shuffle (bool): whether shuffling data or not (set=False) when inferencing test set
+            batch_size (int): size of mini-batch
+            image_size (int): size of images (image_size, image_size, 3)
+            target_cols (list): target columns (some of the following: angry, disgust, fear, happy, sad, surprise, neutral, other)
+            max_len (int): max sequence length each batch
+        """
         self.shuffle = shuffle
         self.image_size = image_size
         self.target_cols = target_cols
@@ -47,16 +60,22 @@ class ICDARGenerator(tf.keras.utils.Sequence):
         self.on_epoch_end()
 
     def on_epoch_end(self):
-        """Updates indexes after each epoch"""
+        """
+        Updates indexes after each epoch
+        """
         if self.shuffle:
             np.random.shuffle(self.indexes)
 
     def __len__(self):
-        """Denotes the number of batches per epoch"""
+        """
+        Denotes the number of batches per epoch
+        """
         return int(np.floor(self.total / self.batch_size))
 
     def __getitem__(self, idx):
-        """Generate one batch of data"""
+        """
+        Generate one batch of data
+        """
         indexes = self.indexes[idx * self.batch_size : (idx + 1) * self.batch_size]
         img_path = [self.img_path[k] for k in indexes]
 
