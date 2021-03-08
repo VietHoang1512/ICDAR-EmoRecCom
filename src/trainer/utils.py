@@ -11,7 +11,6 @@ def select_strategy():
     """
     Auto select device to run in (TPU or GPU)
     Restrict reserving all GPU RAM in tensorflow
-
     Returns:
         stragegy: strategy for training
     """
@@ -40,7 +39,6 @@ def select_strategy():
 def length_plot(lengths):
     """
     Plot the sequence length statistic
-
     Args:
         lengths (list): Sequence lengths (by word or character)
     """
@@ -56,7 +54,6 @@ def length_plot(lengths):
 def seed_all(seed=1512):
     """
     Set seed for reproducing result
-
     Args:
         seed (int, optional): seed number. Defaults to 1512.
     """
@@ -70,10 +67,8 @@ def seed_all(seed=1512):
 def scheduler(epoch):
     """
     Learning rate scheduler by epoch
-
     Args:
         epoch (int): Epoch number
-
     Returns:
         float: learning rate in epochs
     """

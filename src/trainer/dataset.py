@@ -12,29 +12,8 @@ class ICDARGenerator(tf.keras.utils.Sequence):
     """Data Generator for Keras model"""
 
     def __init__(
-        self,
-        df,
-        multimodal,
-        bert_tokenizer,
-        shuffle,
-        batch_size,
-        image_size,
-        target_cols,
-        max_len,
+        self, df, bert_tokenizer, tf_tokenizer, shuffle, batch_size, image_size, target_cols, max_len, max_word
     ):
-        """
-        ICDAR dataset constructor
-
-        Args:
-            df (DataFrame): Processed dataframe, including image paths and dialogues
-            multimodal (bool): whether generating image features or not # FIXME
-            bert_tokenizer (AutoTokenizer): transformer's tokenizer class
-            shuffle (bool): whether shuffling data or not (set=False) when inferencing test set
-            batch_size (int): size of mini-batch
-            image_size (int): size of images (image_size, image_size, 3)
-            target_cols (list): target columns (some of the following: angry, disgust, fear, happy, sad, surprise, neutral, other)
-            max_len (int): max sequence length each batch
-        """
         self.shuffle = shuffle
         self.image_size = image_size
         self.target_cols = target_cols
@@ -55,42 +34,54 @@ class ICDARGenerator(tf.keras.utils.Sequence):
         self.attention_mask = bert_encoded["attention_mask"]
         self.token_type_ids = bert_encoded["token_type_ids"]
 
+        self.image_features = image_size > 0
+        self.word_embedding_feature = tf_tokenizer is not None
+
+        if self.word_embedding_feature:
+            self.sequences = tf_tokenizer.texts_to_sequences(texts)
+            self.sequences = tf.keras.preprocessing.sequence.pad_sequences(
+                self.sequences, maxlen=max_word, padding="post", truncating="post"
+            )
+
         self.total = len(df)
         self.indexes = np.arange(self.total)
         self.on_epoch_end()
 
     def on_epoch_end(self):
-        """
-        Updates indexes after each epoch
-        """
+        """Updates indexes after each epoch"""
         if self.shuffle:
             np.random.shuffle(self.indexes)
 
     def __len__(self):
-        """
-        Denotes the number of batches per epoch
-        """
+        """Denotes the number of batches per epoch"""
         return int(np.floor(self.total / self.batch_size))
 
     def __getitem__(self, idx):
-        """
-        Generate one batch of data
-        """
-        indexes = self.indexes[idx * self.batch_size : (idx + 1) * self.batch_size]
-        img_path = [self.img_path[k] for k in indexes]
+        """Generate one batch of data"""
 
-        images = []
-        for fp in img_path:
-            images.append(self.process_image(fp))
-        images = tf.stack(images)
+        indexes = self.indexes[idx * self.batch_size : (idx + 1) * self.batch_size]
+
+        labels = np.array([self.labels[k] for k in indexes])
 
         input_ids = tf.convert_to_tensor([self.input_ids[k] for k in indexes])
         attention_mask = tf.convert_to_tensor([self.attention_mask[k] for k in indexes])
         token_type_ids = tf.convert_to_tensor([self.token_type_ids[k] for k in indexes])
 
-        labels = np.array([self.labels[k] for k in indexes])
+        features = [input_ids, attention_mask, token_type_ids]
 
-        return [images, input_ids, attention_mask, token_type_ids], labels
+        if self.image_features:
+            img_path = [self.img_path[k] for k in indexes]
+            images = []
+            for fp in img_path:
+                images.append(self.process_image(fp))
+            images = tf.stack(images)
+            features.append(images)
+
+        if self.image_features:
+            sequences = tf.convert_to_tensor([self.sequences[k] for k in indexes])
+            features.append(sequences)
+
+        return features, labels
 
     def decode(self, path):
         file_bytes = tf.io.read_file(path)

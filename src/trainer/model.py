@@ -10,10 +10,8 @@ from transformers import TFAutoModel
 def get_img_model(img_model: str):
     """
     Get Keras image model by name
-
     Args:
         img_model (str): Pretrained image model name
-
     Returns:
         tf.keras.Model: Pretrained image model
     """
@@ -30,21 +28,11 @@ def get_img_model(img_model: str):
     return models_dict[img_model]
 
 
-def build_model(img_model, bert_model, image_size, max_len, target_size, n_hiddens):
+def build_model(img_model, bert_model, image_size, max_len, max_word, embedding_matrix, target_size, n_hiddens):
     """
     ICDAR multimodal model for mixed image and dialog data
     NOTE : https://arxiv.org/pdf/1905.12681.pdf
-
     """
-
-    # Efficient Net pretrained model
-
-    if img_model:
-        img_model = get_img_model(img_model)
-
-        img_input = tf.keras.layers.Input(shape=(image_size, image_size, 3), dtype=tf.float32, name="img_input")
-        img_out = img_model(img_input)
-        img_pooled = tf.keras.layers.GlobalAveragePooling2D()(img_out)
 
     # Bert pretrained model
 
@@ -75,20 +63,37 @@ def build_model(img_model, bert_model, image_size, max_len, target_size, n_hidde
         bert_sequence_output = tf.concat([bert_sequence_output[2][-i] for i in range(n_hiddens)], axis=-1)
         bert_sequence_output = bert_sequence_output[:, 0, :]
 
-    # TODO: implement multimodal model training strategy
-    # img_final = tf.keras.layers.Dense(target_size, activation="sigmoid")(img_pooled)
-    # bert_final = tf.keras.layers.Dense(target_size, activation="sigmoid")(bert_sequence_output)
-    if img_model:
-        out = tf.keras.layers.Concatenate()([img_pooled, bert_sequence_output])
-        out = tf.keras.layers.Dense(target_size, activation="sigmoid")(out)
-    else:
-        out = tf.keras.layers.Dense(target_size, activation="sigmoid")(bert_sequence_output)
+    inputs = [bert_input_word_ids, bert_attention_mask, bert_token_type_ids]
+    outputs = [bert_sequence_output]
 
+    # Efficient Net pretrained model
     if img_model:
-        inputs = [img_input, bert_input_word_ids, bert_attention_mask, bert_token_type_ids]
-    else:
-        inputs = [bert_input_word_ids, bert_attention_mask, bert_token_type_ids]
+        img_model = get_img_model(img_model)
+        img_input = tf.keras.layers.Input(shape=(image_size, image_size, 3), dtype=tf.float32, name="img_input")
+        img_out = img_model(img_input)
+        img_pooled = tf.keras.layers.GlobalAveragePooling2D()(img_out)
+        inputs.append(img_input)
+        outputs.append(img_pooled)
 
-    model = tf.keras.models.Model(inputs=inputs, outputs=out)
+    if embedding_matrix is not None:
+        sequence_input = tf.keras.layers.Input(shape=(max_word,), name="sequence_input")
+        embedding_sequence = tf.keras.layers.Embedding(
+            embedding_matrix.shape[0], embedding_matrix.shape[1], weights=[embedding_matrix], trainable=False
+        )(sequence_input)
+        embedding_sequence = tf.keras.layers.SpatialDropout1D(0.2)(embedding_sequence)
+        embedding_sequence = tf.keras.layers.Bidirectional(
+            tf.keras.layers.GRU(128, return_sequences=True, dropout=0.1)
+        )(embedding_sequence)
+        embedding_sequence = tf.keras.layers.Conv1D(
+            64, kernel_size=3, padding="valid", kernel_initializer="glorot_uniform"
+        )(embedding_sequence)
+        avg_pool = tf.keras.layers.GlobalAveragePooling1D()(embedding_sequence)
+        max_pool = tf.keras.layers.GlobalMaxPooling1D()(embedding_sequence)
+        embedding_sequence_output = tf.keras.layers.Concatenate()([avg_pool, max_pool])
+        inputs.append(sequence_input)
+        outputs.append(embedding_sequence_output)
+
+    outputs = tf.keras.layers.Concatenate()(outputs)
+    model = tf.keras.models.Model(inputs=inputs, outputs=outputs)
 
     return model

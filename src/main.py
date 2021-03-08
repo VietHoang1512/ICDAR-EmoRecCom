@@ -9,11 +9,10 @@ import pandas as pd
 import tensorflow as tf
 import transformers
 from tensorflow.keras import backend as K
-from transformers import AutoTokenizer
-
 from trainer.dataset import ICDARGenerator
 from trainer.model import build_model
 from trainer.utils import scheduler, seed_all, select_strategy
+from transformers import AutoTokenizer
 from utils.constant import *
 from utils.logger import custom_logger
 from utils.processor import (
@@ -76,6 +75,27 @@ parser.add_argument(
     default="roberta-base",
     type=str,
     help="path to pretrained bert model path or directory (e.g: https://huggingface.co/models)",
+)
+
+parser.add_argument(
+    "--word_embedding",
+    type=str,
+    default="../embeddings/glove.840B.300d.pkl",
+    help="path to a pretrained static word embedding",
+)
+
+parser.add_argument(
+    "--max_vocab",
+    default=30000,
+    type=int,
+    help="maximum of word in the vocabulary",
+)
+
+parser.add_argument(
+    "--max_word",
+    default=36,
+    type=int,
+    help="maximum word per text sample",
 )
 
 parser.add_argument(
@@ -189,10 +209,25 @@ if __name__ == "__main__":
     TARGET_COLS = args.target_cols
     TARGET_SIZE = len(TARGET_COLS)
     MULTIMODAL = args.img_model in IMAGE_MODELS
+    STATIC_WORD_EMBEDDING = args.word_embedding in WORD_EMBEDDING_MODELS
+
+    if MULTIMODAL:
+        logger.info("Training with multi-modal strategy")
+    else:
+        args.img_size = -1
+        logger.warning("Training without multi-modal strategy")
+    if STATIC_WORD_EMBEDDING:
+        logger.info("Training with additional word embedding features")
+    else:
+        logger.warning("Training without multi-modal strategy")
 
     if not MULTIMODAL and args.img_model:
         raise NotImplementedError(
             f"{args.img_model} is not available, please choose one of the following model\n {IMAGE_MODELS}"
+        )
+    if not STATIC_WORD_EMBEDDING and args.word_embedding:
+        raise NotImplementedError(
+            f"{args.word_embedding} is not available, please choose one of the following model\n {STATIC_WORD_EMBEDDING}"
         )
 
     train_polarity = pd.read_csv(TRAIN_POLARITY, index_col=0)
@@ -245,6 +280,33 @@ if __name__ == "__main__":
     strategy = select_strategy()
 
     bert_tokenizer = AutoTokenizer.from_pretrained(args.bert_model, use_fast=False)
+
+    embedding_matrix = None
+    tf_tokenizer = None
+    if STATIC_WORD_EMBEDDING:
+        train_texts = train_processed["text"].tolist()
+        test_texts = test_processed["text"].tolist()
+        all_texts = train_texts + test_texts
+        tf_tokenizer = tf.keras.preprocessing.text.Tokenizer(num_words=args.max_vocab, lower=args.lower)
+        tf_tokenizer.fit_on_texts(all_texts)
+        logger.info(f"Word vocabulary size: {len(tf_tokenizer.word_index)}")
+        embeddings = pickle.load(open(args.word_embedding, "rb"))
+
+        if args.lower:
+            embeddings = {word.lower(): vector for word, vector in embeddings.items()}
+        word_index = tf_tokenizer.word_index
+        # prepare embedding matrix
+        num_words = min(args.max_vocab, len(word_index) + 1)
+        embedding_matrix = np.zeros((num_words, 300))
+        miss = 0
+        for word, i in word_index.items():
+            embedding_vector = embeddings.get(word.lower())
+            if embedding_vector is not None:
+                # words not found in embedding index will be all-zeros.
+                embedding_matrix[i] = embedding_vector
+            else:
+                miss += 1
+        logger.warning(f"Missed {miss} in total {num_words} words")
 
     if args.do_train:
         logger.info("Start training")
@@ -336,33 +398,34 @@ if __name__ == "__main__":
         logger.info("Start inference")
         test_dataset = ICDARGenerator(
             test_processed,
-            multimodal=MULTIMODAL,
             bert_tokenizer=bert_tokenizer,
+            tf_tokenizer=tf_tokenizer,
             shuffle=False,
             batch_size=1,
             image_size=args.img_size,
             target_cols=TARGET_COLS,
             max_len=args.max_len,
+            max_word=args.max_word,
         )
-
-        preds = []
-        oof_preds = []
         model = build_model(
             img_model=args.img_model,
             bert_model=args.bert_model,
             image_size=args.img_size,
             max_len=args.max_len,
+            max_word=args.max_word,
+            embedding_matrix=embedding_matrix,
             target_size=TARGET_SIZE,
             n_hiddens=args.n_hiddens,
         )
-        for i, file_path in enumerate(glob(f"{args.ckpt_dir}/*.h5")):
+        preds = []
+        oof_preds = []
+        for i, file_path in enumerate(glob(f"{OUTPUT_DIR}/*.h5")):
             K.clear_session()
             logger.info(f"Inferencing with model from: {file_path}")
             fold = extract_fold_number(file_path)
             val_df = train_processed[train_processed["fold"] == fold].copy()
             val_dataset = ICDARGenerator(
                 df=val_df,
-                multimodal=MULTIMODAL,
                 bert_tokenizer=bert_tokenizer,
                 shuffle=False,
                 batch_size=1,
@@ -378,15 +441,12 @@ if __name__ == "__main__":
             oof_preds.append(val_df)
         pred = np.mean(preds, axis=0)
         test_processed[TARGET_COLS] = pred
-        result_path = os.path.join(args.ckpt_dir, "results.csv")
+        result_path = os.path.join(OUTPUT_DIR, "results.csv")
         test_processed[["image_id"] + TARGET_COLS].to_csv(result_path, header=False)
-
-        # save prediction for stacking
-        test_path = os.path.join(args.ckpt_dir, "test_pred.npy")
+        test_path = os.path.join(OUTPUT_DIR, "test_pred.npy")
         with open(test_path, "wb") as f:
             np.save(f, test_processed[TARGET_COLS].values)
-
-        oof_path = os.path.join(args.ckpt_dir, "oof_pred.npy")
         oof_df = pd.DataFrame.sort_index(pd.concat(oof_preds, axis=0))
+        oof_path = os.path.join(OUTPUT_DIR, "oof_pred.npy")
         with open(oof_path, "wb") as f:
             np.save(f, oof_df[TARGET_COLS].values)

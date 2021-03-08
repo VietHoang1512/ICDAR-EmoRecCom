@@ -8,7 +8,6 @@ import os
 import re
 
 from tqdm import tqdm
-
 from utils.constant import *
 
 tqdm.pandas()

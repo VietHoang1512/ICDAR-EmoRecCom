@@ -27,7 +27,7 @@ def kfold_split(train_df, n_folds):
 
 if __name__ == "__main__":
     n_folds = 5
-    train_df = pd.read_csv("data/train_emotion_labels.csv")
+    train_df = pd.read_csv("../data/train_emotion_labels.csv")
     train_df = kfold_split(train_df, n_folds=n_folds)
-    train_df.to_csv(f"data/train_{n_folds}_folds.csv", index=False)
+    train_df.to_csv(f"../data/train_{n_folds}_folds.csv", index=False)
     print("DONE!")
