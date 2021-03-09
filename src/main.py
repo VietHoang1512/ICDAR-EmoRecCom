@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import pickle
 import re
 from glob import glob
 
@@ -25,9 +26,9 @@ from utils.signature import print_signature
 print("Using Tensorflow version:", tf.__version__)
 print("Using Transformers version:", transformers.__version__)
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description="ICDAR 2021: Multimodal Emotion Recognition on Comics scenes (EmoRecCom)")
 
 parser.add_argument(
     "--data_dir",
@@ -58,14 +59,13 @@ parser.add_argument(
 parser.add_argument(
     "--ckpt_dir",
     type=str,
-    default="outputs/efn_b0_64_roberta-base_32_-1",
+    default="outputs/efn-b0_64_roberta-base_32_-1",
     help="path to the directory containing checkpoints (.h5) models",
 )
 
-
 parser.add_argument(
     "--img_model",
-    default="efn_b0",
+    default="efn-b0",
     type=str,
     help=f"pretrained image model name in list \n {IMAGE_MODELS} \n None for using unimodal model",
 )
@@ -80,7 +80,7 @@ parser.add_argument(
 parser.add_argument(
     "--word_embedding",
     type=str,
-    default="../embeddings/glove.840B.300d.pkl",
+    default="embeddings/glove.840B.300d.pkl",
     help="path to a pretrained static word embedding",
 )
 
@@ -208,8 +208,10 @@ if __name__ == "__main__":
     SAMPLE_SUBMISSION = os.path.join(args.data_dir, SAMPLE_SUBMISSION)
     TARGET_COLS = args.target_cols
     TARGET_SIZE = len(TARGET_COLS)
+
+    WORD_EMBEDDING_MODEL = os.path.splitext(os.path.basename(args.word_embedding))[0]
     MULTIMODAL = args.img_model in IMAGE_MODELS
-    STATIC_WORD_EMBEDDING = args.word_embedding in WORD_EMBEDDING_MODELS
+    STATIC_WORD_EMBEDDING = WORD_EMBEDDING_MODEL in WORD_EMBEDDING_MODELS
 
     if MULTIMODAL:
         logger.info("Training with multi-modal strategy")
@@ -219,7 +221,7 @@ if __name__ == "__main__":
     if STATIC_WORD_EMBEDDING:
         logger.info("Training with additional word embedding features")
     else:
-        logger.warning("Training without multi-modal strategy")
+        logger.warning("Training without additional word embedding features")
 
     if not MULTIMODAL and args.img_model:
         raise NotImplementedError(
@@ -315,6 +317,8 @@ if __name__ == "__main__":
             bert_model=args.bert_model,
             image_size=args.img_size,
             max_len=args.max_len,
+            max_word=args.max_word,
+            embedding_matrix=embedding_matrix,
             target_size=TARGET_SIZE,
             n_hiddens=args.n_hiddens,
         )
@@ -333,6 +337,8 @@ if __name__ == "__main__":
                 bert_model=args.bert_model,
                 image_size=args.img_size,
                 max_len=args.max_len,
+                max_word=args.max_word,
+                embedding_matrix=embedding_matrix,
                 target_size=TARGET_SIZE,
                 n_hiddens=args.n_hiddens,
             )
@@ -407,6 +413,7 @@ if __name__ == "__main__":
             max_len=args.max_len,
             max_word=args.max_word,
         )
+
         model = build_model(
             img_model=args.img_model,
             bert_model=args.bert_model,

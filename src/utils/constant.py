@@ -17,5 +17,5 @@ GCS_DS_PATH = None
 
 ALL_COLS = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral", "other"]
 EMOTIONS = ["neutral", "fear", "surprise", "angry", "happy", "sad", "disgust"]
-IMAGE_MODELS = ["efn_b0", "efn_b1", "efn_b2", "efn_b3", "efn_b4", "efn_b5", "efn_b6", "efn_b7"]
-WORD_EMBEDDING_MODELS = ["glove.840B.300d.pkl", "wiki.en.vec.pkl", "crawl-300d-2M.vec.pkl", "wiki-news-300d-1M.vec.pkl"]
+IMAGE_MODELS = ["efn-b0", "efn-b1", "efn-b2", "efn-b3", "efn-b4", "efn-b5", "efn-b6", "efn-b7"]
+WORD_EMBEDDING_MODELS = ["glove.840B.300d", "wiki.en.vec", "crawl-300d-2M.vec", "wiki-news-300d-1M.vec"]

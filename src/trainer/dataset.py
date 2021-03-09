@@ -9,7 +9,9 @@ import tensorflow as tf
 
 class ICDARGenerator(tf.keras.utils.Sequence):
 
-    """Data Generator for Keras model"""
+    """
+    Data Generator for Keras model
+    """
 
     def __init__(
         self, df, bert_tokenizer, tf_tokenizer, shuffle, batch_size, image_size, target_cols, max_len, max_word
@@ -23,6 +25,7 @@ class ICDARGenerator(tf.keras.utils.Sequence):
         self.labels = df[target_cols].values.astype(float)
 
         texts = df["text"].tolist()
+
         bert_encoded = bert_tokenizer.batch_encode_plus(
             texts,
             return_token_type_ids=True,
@@ -35,9 +38,9 @@ class ICDARGenerator(tf.keras.utils.Sequence):
         self.token_type_ids = bert_encoded["token_type_ids"]
 
         self.image_features = image_size > 0
-        self.word_embedding_feature = tf_tokenizer is not None
+        self.word_embedding_features = tf_tokenizer is not None
 
-        if self.word_embedding_feature:
+        if self.word_embedding_features:
             self.sequences = tf_tokenizer.texts_to_sequences(texts)
             self.sequences = tf.keras.preprocessing.sequence.pad_sequences(
                 self.sequences, maxlen=max_word, padding="post", truncating="post"
@@ -48,16 +51,22 @@ class ICDARGenerator(tf.keras.utils.Sequence):
         self.on_epoch_end()
 
     def on_epoch_end(self):
-        """Updates indexes after each epoch"""
+        """
+        Updates indexes after each epoch
+        """
         if self.shuffle:
             np.random.shuffle(self.indexes)
 
     def __len__(self):
-        """Denotes the number of batches per epoch"""
+        """
+        Denotes the number of batches per epoch
+        """
         return int(np.floor(self.total / self.batch_size))
 
     def __getitem__(self, idx):
-        """Generate one batch of data"""
+        """
+        Generate one batch of data
+        """
 
         indexes = self.indexes[idx * self.batch_size : (idx + 1) * self.batch_size]
 
@@ -77,7 +86,7 @@ class ICDARGenerator(tf.keras.utils.Sequence):
             images = tf.stack(images)
             features.append(images)
 
-        if self.image_features:
+        if self.word_embedding_features:
             sequences = tf.convert_to_tensor([self.sequences[k] for k in indexes])
             features.append(sequences)
 

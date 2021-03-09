@@ -16,14 +16,14 @@ def get_img_model(img_model: str):
         tf.keras.Model: Pretrained image model
     """
     models_dict = {
-        "efn_b0": efn.EfficientNetB0(include_top=False, weights="noisy-student"),
-        "efn_b1": efn.EfficientNetB1(include_top=False, weights="noisy-student"),
-        "efn_b2": efn.EfficientNetB2(include_top=False, weights="noisy-student"),
-        "efn_b3": efn.EfficientNetB3(include_top=False, weights="noisy-student"),
-        "efn_b4": efn.EfficientNetB4(include_top=False, weights="noisy-student"),
-        "efn_b5": efn.EfficientNetB5(include_top=False, weights="noisy-student"),
-        "efn_b6": efn.EfficientNetB6(include_top=False, weights="noisy-student"),
-        "efn_b7": efn.EfficientNetB7(include_top=False, weights="noisy-student"),
+        "efn-b0": efn.EfficientNetB0(include_top=False, weights="noisy-student"),
+        "efn-b1": efn.EfficientNetB1(include_top=False, weights="noisy-student"),
+        "efn-b2": efn.EfficientNetB2(include_top=False, weights="noisy-student"),
+        "efn-b3": efn.EfficientNetB3(include_top=False, weights="noisy-student"),
+        "efn-b4": efn.EfficientNetB4(include_top=False, weights="noisy-student"),
+        "efn-b5": efn.EfficientNetB5(include_top=False, weights="noisy-student"),
+        "efn-b6": efn.EfficientNetB6(include_top=False, weights="noisy-student"),
+        "efn-b7": efn.EfficientNetB7(include_top=False, weights="noisy-student"),
     }
     return models_dict[img_model]
 
@@ -70,10 +70,10 @@ def build_model(img_model, bert_model, image_size, max_len, max_word, embedding_
     if img_model:
         img_model = get_img_model(img_model)
         img_input = tf.keras.layers.Input(shape=(image_size, image_size, 3), dtype=tf.float32, name="img_input")
-        img_out = img_model(img_input)
-        img_pooled = tf.keras.layers.GlobalAveragePooling2D()(img_out)
+        img_output = img_model(img_input)
+        img_output = tf.keras.layers.GlobalAveragePooling2D()(img_output)
         inputs.append(img_input)
-        outputs.append(img_pooled)
+        outputs.append(img_output)
 
     if embedding_matrix is not None:
         sequence_input = tf.keras.layers.Input(shape=(max_word,), name="sequence_input")
@@ -94,6 +94,7 @@ def build_model(img_model, bert_model, image_size, max_len, max_word, embedding_
         outputs.append(embedding_sequence_output)
 
     outputs = tf.keras.layers.Concatenate()(outputs)
+    outputs = tf.keras.layers.Dense(target_size, activation="sigmoid")(outputs)
     model = tf.keras.models.Model(inputs=inputs, outputs=outputs)
 
     return model

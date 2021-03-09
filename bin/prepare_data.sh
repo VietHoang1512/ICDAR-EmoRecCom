@@ -1,8 +1,8 @@
 #!/bin
 export PYTHONPATH=$PWD
 
-emb_dir="../embeddings/"
-mkdir $emb_dir
+emb_dir="embeddings/"
+mkdir -p $emb_dir
 
 # wget https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip
 # unzip crawl-300d-2M.vec.zip -d $emb_dir
