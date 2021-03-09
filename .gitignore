@@ -9,6 +9,7 @@ test.py
 
 # data
 **/data
+**/embeddings
 
 # stuff
 .flake8

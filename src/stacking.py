@@ -5,7 +5,6 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold
-
 from utils.constant import *
 
 STACKING_DIR = OUTPUT_DIR

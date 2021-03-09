@@ -6,15 +6,15 @@
 import math
 import os
 import re
+from typing import List
 
 from tqdm import tqdm
-
 from utils.constant import *
 
 tqdm.pandas()
 
 
-def process_emotion_polarity(df, prefix="prob_"):
+def process_emotion_polarity(df, prefix: str = "prob_"):
     """
     Exploding the emotion column of data
 
@@ -47,7 +47,7 @@ def process_dialog(df, lower=True, text_separator=" "):
         text_separator (str, optional): separator used in joining conversations. Defaults to " ".
     """
 
-    def text_normalize(text: str):
+    def text_normalize(text: str) -> str:
         """
         Simple text pre-processing
 
@@ -77,11 +77,11 @@ def process_dialog(df, lower=True, text_separator=" "):
             text = text.lower()
         return text
 
-    def join_conversation(conversation):
+    def join_conversation(conversation: List) -> str:
         """
         Join conversations with text separator
         Args:
-            conversation (list): dialogues in a comic frame
+            conversation (List): dialogues in a comic frame
 
         Returns:
             str: a single paragraph
@@ -99,7 +99,7 @@ def process_dialog(df, lower=True, text_separator=" "):
     return df
 
 
-def add_file_path(df, img_dir, gcs_ds_path):
+def add_file_path(df, img_dir: str, gcs_ds_path: str):
     """
     Add file path to image filenames
 

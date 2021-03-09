@@ -1,10 +1,27 @@
 import os
 import random
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import tensorflow as tf
+
+
+def parse_experiment(experiment: str) -> Dict:
+    """
+    Parse experiment name into kwargs for alignment between train-infer
+
+    Args:
+        experiment (str): Name of the experiment directory
+
+    Returns:
+        Dict: keyword arguments to build a ICDAR model
+    """
+    fields = ["img_model", "img_size", "bert_model", "max_len", "n_hiddens"]
+    values = experiment.split("_")
+
+    return dict(zip(fields, values))
 
 
 def select_strategy():
@@ -37,12 +54,13 @@ def select_strategy():
     return strategy
 
 
-def length_plot(lengths):
+def length_plot(lengths: List):
+
     """
     Plot the sequence length statistic
 
     Args:
-        lengths (list): Sequence lengths (by word or character)
+        lengths (List): Sequence lengths (by word or character)
     """
     plt.figure(figsize=(15, 9))
     textstr = f" Mean: {np.mean(lengths):.2f} \u00B1 {np.std(lengths):.2f} \n Max: {np.max(lengths)}"
@@ -56,7 +74,6 @@ def length_plot(lengths):
 def seed_all(seed=1512):
     """
     Set seed for reproducing result
-
     Args:
         seed (int, optional): seed number. Defaults to 1512.
     """
@@ -67,13 +84,11 @@ def seed_all(seed=1512):
     tf.random.set_seed(seed)
 
 
-def scheduler(epoch):
+def scheduler(epoch: int) -> float:
     """
     Learning rate scheduler by epoch
-
     Args:
         epoch (int): Epoch number
-
     Returns:
         float: learning rate in epochs
     """
