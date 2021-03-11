@@ -8,7 +8,7 @@ import os
 import re
 from typing import List
 
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from utils.constant import *
 
 tqdm.pandas()
@@ -99,23 +99,23 @@ def process_dialog(df, lower=True, text_separator=" "):
     return df
 
 
-def add_file_path(df, img_dir: str, gcs_ds_path: str):
+def add_file_path(df, image_dir: str, gcs_ds_path: str):
     """
     Add file path to image filenames
 
     Args:
         df (DataFrame): data
-        img_dir (str): path to the images directory
+        image_dir (str): path to the images directory
         gcs_ds_path (str): path to the GCP bucket # FIXME
 
     Returns:
         str: data with the image file paths
     """
     if gcs_ds_path:
-        img_dir = os.path.join(gcs_ds_path, os.path.basename(img_dir))
+        image_dir = os.path.join(gcs_ds_path, os.path.basename(image_dir))
 
     def get_file_path(fn):
-        fp = os.path.join(img_dir, f"{fn}.jpg")
+        fp = os.path.join(image_dir, f"{fn}.jpg")
         if not gcs_ds_path:  # use local storage
             assert os.path.isfile(fp), f"{fp} not found"
         return fp

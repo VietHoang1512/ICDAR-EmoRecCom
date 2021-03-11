@@ -3,8 +3,8 @@
     https://drive.google.com/file/d/1OUd7dQybiioKMu7NXtWxIITdun8SaaUX/view
 """
 
-TRAIN_IMG_DIR = "train"
-TEST_IMG_DIR = "test"
+TRAIN_IMAGE_DIR = "train"
+TEST_IMAGE_DIR = "test"
 TRAIN_LABELS = "train_5_folds.csv"
 TRAIN_POLARITY = "train_emotion_polarity.csv"
 TRAIN_SCRIPT = "train_transcriptions.json"
@@ -19,3 +19,15 @@ ALL_COLS = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral", "
 EMOTIONS = ["neutral", "fear", "surprise", "angry", "happy", "sad", "disgust"]
 IMAGE_MODELS = ["efn-b0", "efn-b1", "efn-b2", "efn-b3", "efn-b4", "efn-b5", "efn-b6", "efn-b7"]
 WORD_EMBEDDING_MODELS = ["glove.840B.300d", "wiki.en.vec", "crawl-300d-2M.vec", "wiki-news-300d-1M.vec"]
+LOAD_ARGS = [
+    "image_model",
+    "bert_model",
+    "word_embedding",
+    "max_vocab",
+    "max_word",
+    "image_size",
+    "max_len",
+    "lower",
+    "text_separator",
+    "n_hiddens",
+]

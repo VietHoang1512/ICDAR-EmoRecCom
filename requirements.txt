@@ -7,5 +7,5 @@ tensorflow-gpu
 pydot
 graphviz
 gdown
-transformers==3.4.0
+transformers==3.5.0
 efficientnet

@@ -13,12 +13,12 @@ word_embedding="$embedding_dir/glove.840B.300d.pkl"
 python src/main.py \
     --data_dir=$data_dir \
     --target_cols angry disgust fear happy sad surprise neutral other \
-    --do_train \
-    --img_model efn-b1 \
+    --gpus 1 \
+    --image_model efn-b1 \
     --bert_model roberta-base \
     --word_embedding=$word_embedding \
     --max_vocab 30000 \
-    --img_size 128 \
+    --image_size 128 \
     --max_word 36 \
     --max_len 48 \
     --lower \
@@ -26,4 +26,5 @@ python src/main.py \
     --n_hiddens -1 \
     --lr 0.00003 \
     --n_epochs 5 \
-    --seed 1710
+    --seed 1710 \
+    --do_train 

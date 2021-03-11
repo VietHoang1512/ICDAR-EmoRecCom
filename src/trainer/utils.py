@@ -1,10 +1,8 @@
 import os
 import random
-from typing import Dict, List
+from typing import Dict
 
-import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 import tensorflow as tf
 
 
@@ -18,7 +16,7 @@ def parse_experiment(experiment: str) -> Dict:
     Returns:
         Dict: keyword arguments to build a ICDAR model
     """
-    fields = ["img_model", "img_size", "bert_model", "max_len", "n_hiddens"]
+    fields = ["image_model", "image_size", "bert_model", "max_len", "n_hiddens"]
     values = experiment.split("_")
 
     return dict(zip(fields, values))
@@ -54,23 +52,6 @@ def select_strategy():
     return strategy
 
 
-def length_plot(lengths: List):
-
-    """
-    Plot the sequence length statistic
-
-    Args:
-        lengths (List): Sequence lengths (by word or character)
-    """
-    plt.figure(figsize=(15, 9))
-    textstr = f" Mean: {np.mean(lengths):.2f} \u00B1 {np.std(lengths):.2f} \n Max: {np.max(lengths)}"
-    props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
-
-    plt.text(0, 0, textstr, fontsize=14, verticalalignment="top", bbox=props)
-    sns.countplot(lengths, orient="h")
-    plt.show()
-
-
 def seed_all(seed=1512):
     """
     Set seed for reproducing result
@@ -93,3 +74,7 @@ def scheduler(epoch: int) -> float:
         float: learning rate in epochs
     """
     return 3e-5 * 0.2 ** epoch
+
+
+if __name__ == "__main__":
+    print(parse_experiment("efn-b1_128_roberta-base_48_-1"))
