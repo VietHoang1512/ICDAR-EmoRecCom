@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import transformers
+import yaml
 from tensorflow.keras import backend as K
 from trainer.dataset import ICDARGenerator
 from trainer.model import build_model
@@ -22,11 +23,11 @@ from utils.processor import (
     process_emotion_polarity,
 )
 from utils.signature import print_signature
+from utils.text import get_embedding_matrix
 
 print("Using Tensorflow version:", tf.__version__)
 print("Using Transformers version:", transformers.__version__)
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 parser = argparse.ArgumentParser(description="ICDAR 2021: Multimodal Emotion Recognition on Comics scenes (EmoRecCom)")
 
@@ -45,26 +46,35 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--gpus",
+    nargs="+",
+    default=0,
+    help="select gpus to use",
+)
+
+parser.add_argument(
     "--do_train",
     action="store_true",
+    default=False,
     help="whether train the pretrained model with provided train data",
 )
 
 parser.add_argument(
     "--do_infer",
     action="store_true",
-    help="whether predict the pretrained model with provided test data",
+    default=False,
+    help="whether predict the provided test data with the trained models from checkpoint directory",
 )
 
 parser.add_argument(
     "--ckpt_dir",
     type=str,
-    default="outputs/efn-b0_64_roberta-base_32_-1",
+    # default="outputs/efn-b0_64_roberta-base_32_-1",
     help="path to the directory containing checkpoints (.h5) models",
 )
 
 parser.add_argument(
-    "--img_model",
+    "--image_model",
     default="efn-b0",
     type=str,
     help=f"pretrained image model name in list \n {IMAGE_MODELS} \n None for using unimodal model",
@@ -80,27 +90,26 @@ parser.add_argument(
 parser.add_argument(
     "--word_embedding",
     type=str,
-    default="embeddings/glove.840B.300d.pkl",
-    help="path to a pretrained static word embedding",
+    help=f"path to a pretrained static word embedding in list \n {WORD_EMBEDDING_MODELS} \n None for using bert model to represent text",
 )
 
 parser.add_argument(
     "--max_vocab",
-    default=30000,
+    # default=30000,
     type=int,
-    help="maximum of word in the vocabulary",
+    help="maximum of word in the vocabulary (Tensorflow word tokenizer)",
 )
 
 parser.add_argument(
     "--max_word",
-    default=36,
+    default=-1,
     type=int,
-    help="maximum word per text sample",
+    help="maximum word per text sample (Tensorflow word tokenizer)",
 )
 
 parser.add_argument(
-    "--img_size",
-    default=256,
+    "--image_size",
+    # default=256,
     type=int,
     help="size of image",
 )
@@ -109,7 +118,7 @@ parser.add_argument(
     "--max_len",
     default=64,
     type=int,
-    help="max sequence length for padding and truncation",
+    help="max sequence length for padding and truncation (Bert word tokenizer)",
 )
 
 parser.add_argument(
@@ -178,10 +187,10 @@ if __name__ == "__main__":
     print_signature()
 
     # setup working directory
-    experiment = f"{args.img_model}_{args.img_size}_{args.bert_model}_{args.max_len}_{args.n_hiddens}"
+    experiment = f"{args.image_model}_{args.image_size}_{args.bert_model}_{args.max_len}_{args.n_hiddens}"
     OUTPUT_DIR = os.path.join(OUTPUT_DIR, experiment)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    args.ckpt_dir = OUTPUT_DIR
+
     logger = custom_logger(logging_dir=OUTPUT_DIR)
 
     config_info = "\n" + "*" * 50 + "\nGLOBAL CONFIGURATION\n"
@@ -189,6 +198,9 @@ if __name__ == "__main__":
         config_info += f"{arg} : { getattr(args, arg)}\n"
     config_info += "*" * 50
     logger.info(config_info)
+
+    with open(f"{OUTPUT_DIR}/config.yaml", "w") as file:
+        yaml.dump(vars(args), file, indent=4)
 
     if "KAGGLE_CONTAINER_NAME" in os.environ:
         KAGGLE = True
@@ -199,8 +211,8 @@ if __name__ == "__main__":
         logger.warning("Kaggle enviroment is not available, use local storage instead")
 
     # Adapt working directory
-    TRAIN_IMG_DIR = os.path.join(args.data_dir, TRAIN_IMG_DIR)
-    TEST_IMG_DIR = os.path.join(args.data_dir, TEST_IMG_DIR)
+    TRAIN_IMAGE_DIR = os.path.join(args.data_dir, TRAIN_IMAGE_DIR)
+    TEST_IMAGE_DIR = os.path.join(args.data_dir, TEST_IMAGE_DIR)
     TRAIN_LABELS = os.path.join(args.data_dir, TRAIN_LABELS)
     TRAIN_POLARITY = os.path.join(args.data_dir, TRAIN_POLARITY)
     TRAIN_SCRIPT = os.path.join(args.data_dir, TRAIN_SCRIPT)
@@ -209,28 +221,8 @@ if __name__ == "__main__":
     TARGET_COLS = args.target_cols
     TARGET_SIZE = len(TARGET_COLS)
 
-    WORD_EMBEDDING_MODEL = os.path.splitext(os.path.basename(args.word_embedding))[0]
-    MULTIMODAL = args.img_model in IMAGE_MODELS
-    STATIC_WORD_EMBEDDING = WORD_EMBEDDING_MODEL in WORD_EMBEDDING_MODELS
-
-    if MULTIMODAL:
-        logger.info("Training with multi-modal strategy")
-    else:
-        args.img_size = -1
-        logger.warning("Training without multi-modal strategy")
-    if STATIC_WORD_EMBEDDING:
-        logger.info("Training with additional word embedding features")
-    else:
-        logger.warning("Training without additional word embedding features")
-
-    if not MULTIMODAL and args.img_model:
-        raise NotImplementedError(
-            f"{args.img_model} is not available, please choose one of the following model\n {IMAGE_MODELS}"
-        )
-    if not STATIC_WORD_EMBEDDING and args.word_embedding:
-        raise NotImplementedError(
-            f"{args.word_embedding} is not available, please choose one of the following model\n {STATIC_WORD_EMBEDDING}"
-        )
+    GPUS = ",".join([str(gpu) for gpu in args.gpus])
+    os.environ["CUDA_VISIBLE_DEVICES"] = GPUS
 
     train_polarity = pd.read_csv(TRAIN_POLARITY, index_col=0)
     train_labels = pd.read_csv(TRAIN_LABELS, index_col=0)
@@ -252,12 +244,14 @@ if __name__ == "__main__":
     test_non_processed = pd.merge(sample_submission, test_script, on="image_id")
 
     train_processed = process_dialog(
-        process_emotion_polarity(add_file_path(df=train_non_processed, img_dir=TRAIN_IMG_DIR, gcs_ds_path=GCS_DS_PATH)),
+        process_emotion_polarity(
+            add_file_path(df=train_non_processed, image_dir=TRAIN_IMAGE_DIR, gcs_ds_path=GCS_DS_PATH)
+        ),
         lower=args.lower,
         text_separator=args.text_separator,
     )
     test_processed = process_dialog(
-        add_file_path(df=test_non_processed, img_dir=TEST_IMG_DIR, gcs_ds_path=GCS_DS_PATH),
+        add_file_path(df=test_non_processed, image_dir=TEST_IMAGE_DIR, gcs_ds_path=GCS_DS_PATH),
         lower=args.lower,
         text_separator=args.text_separator,
     )
@@ -279,43 +273,63 @@ if __name__ == "__main__":
             f.write(f"\nText: {row['text']}\n")
             f.write(f"Narration {row['narration']}\n")
 
+    # Get all text
+    train_texts = train_processed["text"].tolist()
+    test_texts = test_processed["text"].tolist()
+    all_texts = train_texts + test_texts
+
     strategy = select_strategy()
-
-    bert_tokenizer = AutoTokenizer.from_pretrained(args.bert_model, use_fast=False)
-
-    embedding_matrix = None
-    tf_tokenizer = None
-    if STATIC_WORD_EMBEDDING:
-        train_texts = train_processed["text"].tolist()
-        test_texts = test_processed["text"].tolist()
-        all_texts = train_texts + test_texts
-        tf_tokenizer = tf.keras.preprocessing.text.Tokenizer(num_words=args.max_vocab, lower=args.lower)
-        tf_tokenizer.fit_on_texts(all_texts)
-        logger.info(f"Word vocabulary size: {len(tf_tokenizer.word_index)}")
-        embeddings = pickle.load(open(args.word_embedding, "rb"))
-
-        if args.lower:
-            embeddings = {word.lower(): vector for word, vector in embeddings.items()}
-        word_index = tf_tokenizer.word_index
-        # prepare embedding matrix
-        num_words = min(args.max_vocab, len(word_index) + 1)
-        embedding_matrix = np.zeros((num_words, 300))
-        miss = 0
-        for word, i in word_index.items():
-            embedding_vector = embeddings.get(word.lower())
-            if embedding_vector is not None:
-                # words not found in embedding index will be all-zeros.
-                embedding_matrix[i] = embedding_vector
-            else:
-                miss += 1
-        logger.warning(f"Missed {miss} in total {num_words} words")
 
     if args.do_train:
         logger.info("Start training")
+        WORD_EMBEDDING_MODEL = (
+            os.path.splitext(os.path.basename(args.word_embedding))[0] if args.word_embedding else None
+        )
+        MULTIMODAL = args.image_model in IMAGE_MODELS
+        STATIC_WORD_EMBEDDING = WORD_EMBEDDING_MODEL in WORD_EMBEDDING_MODELS
+
+        if MULTIMODAL:
+            logger.info("Training with multi-modal strategy")
+        else:
+            args.image_size = -1
+            logger.warning("Training without multi-modal strategy")
+        if STATIC_WORD_EMBEDDING:
+            logger.info("Training with additional word embedding features")
+        else:
+            logger.warning("Training without additional word embedding features")
+
+        if not MULTIMODAL and args.image_model:
+            raise NotImplementedError(
+                f"{args.image_model} is not available, please choose one of the following model\n {IMAGE_MODELS}"
+            )
+        if not STATIC_WORD_EMBEDDING and args.word_embedding:
+            raise NotImplementedError(
+                f"{args.word_embedding} is not available, please choose one of the following model\n {STATIC_WORD_EMBEDDING}"
+            )
+
+        embedding_matrix = None
+        tf_tokenizer = None
+        if STATIC_WORD_EMBEDDING:
+            tf_tokenizer = tf.keras.preprocessing.text.Tokenizer(num_words=args.max_vocab, lower=args.lower)
+            tf_tokenizer.fit_on_texts(all_texts)
+            logger.info(f"Word vocabulary size: {len(tf_tokenizer.word_index)}")
+            tf_tokenizer_fp = os.path.join(OUTPUT_DIR, "tokenizer.pkl")
+            pickle.dump(tf_tokenizer, open(tf_tokenizer_fp, "wb"), protocol=pickle.HIGHEST_PROTOCOL)
+            logger.info(f"Saved TF tokenizer to {tf_tokenizer_fp}")
+            embedding_matrix = get_embedding_matrix(
+                word_index=tf_tokenizer.word_index,
+                max_vocab=args.max_vocab,
+                embedding_fp=args.word_embedding,
+                lower=args.lower,
+            )
+
+        if args.do_infer:
+            args.ckpt_dir = OUTPUT_DIR
+
         model = build_model(
-            img_model=args.img_model,
+            image_model=args.image_model,
             bert_model=args.bert_model,
-            image_size=args.img_size,
+            image_size=args.image_size,
             max_len=args.max_len,
             max_word=args.max_word,
             embedding_matrix=embedding_matrix,
@@ -333,9 +347,9 @@ if __name__ == "__main__":
             #     with strategy.scope():
             #         model = build_model()
             model = build_model(
-                img_model=args.img_model,
+                image_model=args.image_model,
                 bert_model=args.bert_model,
-                image_size=args.img_size,
+                image_size=args.image_size,
                 max_len=args.max_len,
                 max_word=args.max_word,
                 embedding_matrix=embedding_matrix,
@@ -363,27 +377,29 @@ if __name__ == "__main__":
 
             train_df = train_processed[train_processed["fold"] != fold].copy()
             val_df = train_processed[train_processed["fold"] == fold].copy()
-
+            bert_tokenizer = AutoTokenizer.from_pretrained(args.bert_model, use_fast=False)
             train_dataset = ICDARGenerator(
                 df=train_df,
-                multimodal=MULTIMODAL,
                 bert_tokenizer=bert_tokenizer,
+                tf_tokenizer=tf_tokenizer,
                 shuffle=True,
                 batch_size=args.batch_size,
-                image_size=args.img_size,
+                image_size=args.image_size,
                 target_cols=TARGET_COLS,
                 max_len=args.max_len,
+                max_word=args.max_word,
             )
 
             val_dataset = ICDARGenerator(
                 df=val_df,
-                multimodal=MULTIMODAL,
                 bert_tokenizer=bert_tokenizer,
+                tf_tokenizer=tf_tokenizer,
                 shuffle=True,
                 batch_size=args.batch_size,
-                image_size=args.img_size,
+                image_size=args.image_size,
                 target_cols=TARGET_COLS,
                 max_len=args.max_len,
+                max_word=args.max_word,
             )
 
             history = model.fit(
@@ -401,32 +417,64 @@ if __name__ == "__main__":
             folds_history.append(history.history)
 
     if args.do_infer:
-        logger.info("Start inference")
+
+        if not args.do_train:
+            logger.info(f"Inferencing with models from {args.ckpt_dir}")
+            logger.warning("The initial passing arguments with be overwriten with configuration from this checkpoint")
+
+        with open(f"{args.ckpt_dir}/config.yaml", "r") as file:
+            config = yaml.load(file, Loader=yaml.FullLoader)
+            for key, value in config.items():
+                if key in LOAD_ARGS:
+                    setattr(args, key, value)
+
+        config_info = "\n" + "*" * 50 + "\nGLOBAL CONFIGURATION\n"
+
+        for arg in vars(args):
+            config_info += f"{arg} : { getattr(args, arg)}\n"
+        config_info += "*" * 50
+        logger.info(config_info)
+
+        logger.info("Start inferencing")
+
+        embedding_matrix = None
+        if args.word_embedding:
+            tf_tokenizer_fp = os.path.join(args.ckpt_dir, "tokenizer.pkl")
+            tf_tokenizer = pickle.load(open(tf_tokenizer_fp, "rb"))
+            embedding_matrix = get_embedding_matrix(
+                word_index=tf_tokenizer.word_index,
+                max_vocab=args.max_vocab,
+                embedding_fp=args.word_embedding,
+                lower=args.lower,
+            )
+
+        model = build_model(
+            image_model=args.image_model,
+            bert_model=args.bert_model,
+            image_size=args.image_size,
+            max_len=args.max_len,
+            max_word=args.max_word,
+            embedding_matrix=embedding_matrix,
+            target_size=len(args.target_cols),
+            n_hiddens=args.n_hiddens,
+        )
+        model.summary(print_fn=logger.info)
+        preds = []
+        oof_preds = []
+
+        bert_tokenizer = AutoTokenizer.from_pretrained(args.bert_model, use_fast=False)
         test_dataset = ICDARGenerator(
             test_processed,
             bert_tokenizer=bert_tokenizer,
             tf_tokenizer=tf_tokenizer,
             shuffle=False,
             batch_size=1,
-            image_size=args.img_size,
-            target_cols=TARGET_COLS,
+            image_size=args.image_size,
+            target_cols=args.target_cols,
             max_len=args.max_len,
             max_word=args.max_word,
         )
-
-        model = build_model(
-            img_model=args.img_model,
-            bert_model=args.bert_model,
-            image_size=args.img_size,
-            max_len=args.max_len,
-            max_word=args.max_word,
-            embedding_matrix=embedding_matrix,
-            target_size=TARGET_SIZE,
-            n_hiddens=args.n_hiddens,
-        )
-        preds = []
-        oof_preds = []
-        for i, file_path in enumerate(glob(f"{OUTPUT_DIR}/*.h5")):
+        for i, file_path in enumerate(glob(f"{args.ckpt_dir}/*.h5")):
             K.clear_session()
             logger.info(f"Inferencing with model from: {file_path}")
             fold = extract_fold_number(file_path)
@@ -434,11 +482,13 @@ if __name__ == "__main__":
             val_dataset = ICDARGenerator(
                 df=val_df,
                 bert_tokenizer=bert_tokenizer,
+                tf_tokenizer=tf_tokenizer,
                 shuffle=False,
                 batch_size=1,
-                image_size=args.img_size,
-                target_cols=TARGET_COLS,
+                image_size=args.image_size,
+                target_cols=args.target_cols,
                 max_len=args.max_len,
+                max_word=args.max_word,
             )
             model.load_weights(file_path)
             pred = model.predict(test_dataset, verbose=1)

@@ -14,14 +14,23 @@ class ICDARGenerator(tf.keras.utils.Sequence):
     """
 
     def __init__(
-        self, df, bert_tokenizer, tf_tokenizer, shuffle, batch_size, image_size, target_cols, max_len, max_word
+        self,
+        df,
+        bert_tokenizer,
+        shuffle,
+        batch_size,
+        max_len,
+        tf_tokenizer,
+        max_word,
+        image_size,
+        target_cols,
     ):
         self.shuffle = shuffle
         self.image_size = image_size
         self.target_cols = target_cols
         self.batch_size = batch_size
 
-        self.img_path = df["file_path"].values
+        self.image_path = df["file_path"].values
         self.labels = df[target_cols].values.astype(float)
 
         texts = df["text"].tolist()
@@ -79,9 +88,9 @@ class ICDARGenerator(tf.keras.utils.Sequence):
         features = [input_ids, attention_mask, token_type_ids]
 
         if self.image_features:
-            img_path = [self.img_path[k] for k in indexes]
+            image_path = [self.image_path[k] for k in indexes]
             images = []
-            for fp in img_path:
+            for fp in image_path:
                 images.append(self.process_image(fp))
             images = tf.stack(images)
             features.append(images)
@@ -92,17 +101,18 @@ class ICDARGenerator(tf.keras.utils.Sequence):
 
         return features, labels
 
-    def decode(self, path):
+    def decode(self, path: str):
+
         file_bytes = tf.io.read_file(path)
-        img = tf.image.decode_jpeg(file_bytes, channels=3)
-        img = tf.cast(img, tf.float32) / 255.0
-        img = tf.image.resize(img, (self.image_size, self.image_size))
+        image = tf.image.decode_jpeg(file_bytes, channels=3)
+        image = tf.cast(image, tf.float32) / 255.0
+        image = tf.image.resize(image, (self.image_size, self.image_size))
 
-        return img
+        return image
 
-    def augment(self, img):
+    def augment(self, image):
         # TODO: add images augmentations
-        return img
+        return image
 
     def process_image(self, path):
         return self.augment(self.decode(path))
