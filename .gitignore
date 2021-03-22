@@ -147,7 +147,7 @@ debug/
 
 # data/
 .idea/
-*.png
+# *.png
 *.jpg
 *.PNG
 *.JPEG
