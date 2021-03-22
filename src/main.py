@@ -94,7 +94,7 @@ parser.add_argument(
 parser.add_argument(
     "--word_embedding",
     type=str,
-    help=f"path to a pretrained static word embedding in list \n {constant.WORD_EMBEDDING_MODELS} \n None for using bert model to represent text",
+    help=f"path to a pretrained static word embedding in list \n {constant.WORD_EMBEDDING_MODELS} \n None for using bert model only to represent text",
 )
 
 parser.add_argument(
@@ -149,7 +149,7 @@ parser.add_argument(
     "--lr",
     default=3e-5,
     type=float,
-    help="Learning rate",
+    help="learning rate",
 )
 
 parser.add_argument(

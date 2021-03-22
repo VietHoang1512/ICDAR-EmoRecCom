@@ -1,8 +1,12 @@
-## [ICDAR 2021](https://competitions.codalab.org/competitions/27884)
+<div align="center">
 
-Multimodal Emotion Recognition on Comics scenes (EmoRecCom)
+## [ICDAR 2021](https://icdar2021.org/program-2/competitions/) <img src="assets/icdar.png" alt="ICDAR 2021" width="25" height="15">
 
-### Usage:
+### [Multimodal Emotion Recognition on Comics scenes](https://competitions.codalab.org/competitions/27884)
+
+</div>
+
+### 🏹 Usage:
 ```bash
 usage: main.py [-h] [--data_dir DATA_DIR]
                [--target_cols TARGET_COLS [TARGET_COLS ...]]
@@ -66,4 +70,4 @@ optional arguments:
   --seed SEED           seed for reproceduce
 ```
 
-### [Outputs](https://drive.google.com/drive/folders/1mfeWRV9-yfmcbIWgLWLBKblM1-cPaWOi?usp=sharing)
+### 💪 [Outputs](https://drive.google.com/drive/folders/1mfeWRV9-yfmcbIWgLWLBKblM1-cPaWOi?usp=sharing)
