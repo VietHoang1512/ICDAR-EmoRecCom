@@ -76,7 +76,7 @@ def build_model(
         # bert_sequence_output = bert_sequence_output[1]
     else:  # concatenate n_hiddens final layer
         bert_sequence_output = tf.concat([bert_sequence_output[2][-i] for i in range(n_hiddens)], axis=-1)
-        bert_sequence_output = bert_sequence_output[:, 0, :]
+        bert_sequence_output = tf.keras.layers.Flatten()(bert_sequence_output)
 
     inputs = [bert_input_word_ids, bert_attention_mask, bert_token_type_ids]
     outputs = [bert_sequence_output]

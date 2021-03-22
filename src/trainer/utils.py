@@ -1,5 +1,6 @@
 import os
 import random
+import re
 from typing import Dict
 
 import numpy as np
@@ -74,6 +75,10 @@ def scheduler(epoch: int) -> float:
         float: learning rate in epochs
     """
     return 3e-5 * 0.2 ** epoch
+
+
+def extract_fold_number(file_path: str) -> str:
+    return int(re.findall("(\d)\.h5", file_path)[0])
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ import re
 from typing import List
 
 from tqdm.auto import tqdm
-from utils.constant import *
+from utils import constant
 
 tqdm.pandas()
 
@@ -26,12 +26,12 @@ def process_emotion_polarity(df, prefix: str = "prob_"):
         DataFrame: Processed dataframe
     """
     df = df.copy()
-    for emotion in EMOTIONS:
+    for emotion in constant.EMOTIONS:
         df[prefix + emotion] = 0
     for index, row in tqdm(df.iterrows(), desc="Processing emotion polarity", total=len(df)):
         emotion_polarity = eval(row["emotion_polarity"])
         for emotion, prob in emotion_polarity.items():
-            assert emotion in EMOTIONS, f"Invalid emotion {emotion}"
+            assert emotion in constant.EMOTIONS, f"Invalid emotion {emotion}"
             df.loc[index, prefix + emotion] = prob
     df = df.drop(columns=["emotion_polarity"])
     return df
