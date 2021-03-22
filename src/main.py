@@ -2,7 +2,6 @@ import argparse
 import json
 import os
 import pickle
-import re
 from glob import glob
 
 import numpy as np
@@ -13,9 +12,14 @@ import yaml
 from tensorflow.keras import backend as K
 from trainer.dataset import ICDARGenerator
 from trainer.model import build_model
-from trainer.utils import scheduler, seed_all, select_strategy
+from trainer.utils import (
+    extract_fold_number,
+    scheduler,
+    seed_all,
+    select_strategy,
+)
 from transformers import AutoTokenizer
-from utils.constant import *
+from utils import constant
 from utils.logger import custom_logger
 from utils.processor import (
     add_file_path,
@@ -41,7 +45,7 @@ parser.add_argument(
 parser.add_argument(
     "--target_cols",
     nargs="+",
-    default=ALL_COLS,
+    default=constant.ALL_COLS,
     help="define columns for forecasting",
 )
 
@@ -77,7 +81,7 @@ parser.add_argument(
     "--image_model",
     default="efn-b0",
     type=str,
-    help=f"pretrained image model name in list \n {IMAGE_MODELS} \n None for using unimodal model",
+    help=f"pretrained image model name in list \n {constant.IMAGE_MODELS} \n None for using unimodal model",
 )
 
 parser.add_argument(
@@ -90,7 +94,7 @@ parser.add_argument(
 parser.add_argument(
     "--word_embedding",
     type=str,
-    help=f"path to a pretrained static word embedding in list \n {WORD_EMBEDDING_MODELS} \n None for using bert model to represent text",
+    help=f"path to a pretrained static word embedding in list \n {constant.WORD_EMBEDDING_MODELS} \n None for using bert model to represent text",
 )
 
 parser.add_argument(
@@ -178,17 +182,13 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def extract_fold_number(file_path: str) -> str:
-    return int(re.findall("(\d)\.h5", file_path)[0])
-
-
 if __name__ == "__main__":
     seed_all(seed=args.seed)
     print_signature()
 
     # setup working directory
     experiment = f"{args.image_model}_{args.image_size}_{args.bert_model}_{args.max_len}_{args.n_hiddens}"
-    OUTPUT_DIR = os.path.join(OUTPUT_DIR, experiment)
+    OUTPUT_DIR = os.path.join(constant.OUTPUT_DIR, experiment)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     logger = custom_logger(logging_dir=OUTPUT_DIR)
@@ -211,13 +211,13 @@ if __name__ == "__main__":
         logger.warning("Kaggle enviroment is not available, use local storage instead")
 
     # Adapt working directory
-    TRAIN_IMAGE_DIR = os.path.join(args.data_dir, TRAIN_IMAGE_DIR)
-    TEST_IMAGE_DIR = os.path.join(args.data_dir, TEST_IMAGE_DIR)
-    TRAIN_LABELS = os.path.join(args.data_dir, TRAIN_LABELS)
-    TRAIN_POLARITY = os.path.join(args.data_dir, TRAIN_POLARITY)
-    TRAIN_SCRIPT = os.path.join(args.data_dir, TRAIN_SCRIPT)
-    TEST_SCRIPT = os.path.join(args.data_dir, TEST_SCRIPT)
-    SAMPLE_SUBMISSION = os.path.join(args.data_dir, SAMPLE_SUBMISSION)
+    TRAIN_IMAGE_DIR = os.path.join(args.data_dir, constant.TRAIN_IMAGE_DIR)
+    TEST_IMAGE_DIR = os.path.join(args.data_dir, constant.TEST_IMAGE_DIR)
+    TRAIN_LABELS = os.path.join(args.data_dir, constant.TRAIN_LABELS)
+    TRAIN_POLARITY = os.path.join(args.data_dir, constant.TRAIN_POLARITY)
+    TRAIN_SCRIPT = os.path.join(args.data_dir, constant.TRAIN_SCRIPT)
+    TEST_SCRIPT = os.path.join(args.data_dir, constant.TEST_SCRIPT)
+    SAMPLE_SUBMISSION = os.path.join(args.data_dir, constant.SAMPLE_SUBMISSION)
     TARGET_COLS = args.target_cols
     TARGET_SIZE = len(TARGET_COLS)
 
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     with open(TRAIN_SCRIPT, "r") as f:
         train_script_json = json.load(f)
 
-    sample_submission = pd.read_csv(SAMPLE_SUBMISSION, index_col=0, header=None, names=["image_id"] + ALL_COLS)
+    sample_submission = pd.read_csv(SAMPLE_SUBMISSION, index_col=0, header=None, names=["image_id"] + constant.ALL_COLS)
     with open(TEST_SCRIPT, "r") as f:
         test_script_json = json.load(f)
 
@@ -245,13 +245,13 @@ if __name__ == "__main__":
 
     train_processed = process_dialog(
         process_emotion_polarity(
-            add_file_path(df=train_non_processed, image_dir=TRAIN_IMAGE_DIR, gcs_ds_path=GCS_DS_PATH)
+            add_file_path(df=train_non_processed, image_dir=TRAIN_IMAGE_DIR, gcs_ds_path=constant.GCS_DS_PATH)
         ),
         lower=args.lower,
         text_separator=args.text_separator,
     )
     test_processed = process_dialog(
-        add_file_path(df=test_non_processed, image_dir=TEST_IMAGE_DIR, gcs_ds_path=GCS_DS_PATH),
+        add_file_path(df=test_non_processed, image_dir=TEST_IMAGE_DIR, gcs_ds_path=constant.GCS_DS_PATH),
         lower=args.lower,
         text_separator=args.text_separator,
     )
@@ -260,7 +260,7 @@ if __name__ == "__main__":
     with open("train.txt", "w") as f:
         for index, row in train_processed.iterrows():
             f.write(f"\n{index} {row['image_id']} \n")
-            for col in ALL_COLS:
+            for col in constant.ALL_COLS:
                 f.write(f"{col} {row[col]} | ")
             f.write(f"\nText: {row['text']}\n")
             f.write(f"Narration {row['narration']}\n")
@@ -268,7 +268,7 @@ if __name__ == "__main__":
     with open("test.txt", "w") as f:
         for index, row in test_processed.iterrows():
             f.write(f"\n{index} {row['image_id']} \n")
-            for col in ALL_COLS:
+            for col in constant.ALL_COLS:
                 f.write(f"{col} {row[col]} | ")
             f.write(f"\nText: {row['text']}\n")
             f.write(f"Narration {row['narration']}\n")
@@ -285,8 +285,8 @@ if __name__ == "__main__":
         WORD_EMBEDDING_MODEL = (
             os.path.splitext(os.path.basename(args.word_embedding))[0] if args.word_embedding else None
         )
-        MULTIMODAL = args.image_model in IMAGE_MODELS
-        STATIC_WORD_EMBEDDING = WORD_EMBEDDING_MODEL in WORD_EMBEDDING_MODELS
+        MULTIMODAL = args.image_model in constant.IMAGE_MODELS
+        STATIC_WORD_EMBEDDING = WORD_EMBEDDING_MODEL in constant.WORD_EMBEDDING_MODELS
 
         if MULTIMODAL:
             logger.info("Training with multi-modal strategy")
@@ -300,11 +300,11 @@ if __name__ == "__main__":
 
         if not MULTIMODAL and args.image_model:
             raise NotImplementedError(
-                f"{args.image_model} is not available, please choose one of the following model\n {IMAGE_MODELS}"
+                f"{args.image_model} is not available, please choose one of the following model\n {constant.IMAGE_MODELS}"
             )
         if not STATIC_WORD_EMBEDDING and args.word_embedding:
             raise NotImplementedError(
-                f"{args.word_embedding} is not available, please choose one of the following model\n {STATIC_WORD_EMBEDDING}"
+                f"{args.word_embedding} is not available, please choose one of the following model\n {constant.STATIC_WORD_EMBEDDING}"
             )
 
         embedding_matrix = None
@@ -425,7 +425,7 @@ if __name__ == "__main__":
         with open(f"{args.ckpt_dir}/config.yaml", "r") as file:
             config = yaml.load(file, Loader=yaml.FullLoader)
             for key, value in config.items():
-                if key in LOAD_ARGS:
+                if key in constant.LOAD_ARGS:
                     setattr(args, key, value)
 
         config_info = "\n" + "*" * 50 + "\nGLOBAL CONFIGURATION\n"
