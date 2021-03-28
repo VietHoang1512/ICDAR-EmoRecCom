@@ -3,14 +3,12 @@
     https://drive.google.com/file/d/1OUd7dQybiioKMu7NXtWxIITdun8SaaUX/view
 """
 
-TRAIN_IMAGE_DIR = "train"
-TEST_IMAGE_DIR = "test"
+IMAGE_DIR = "images"
 TRAIN_LABELS = "train_5_folds.csv"
-TRAIN_POLARITY = "train_emotion_polarity.csv"
+TRAIN_POLARITY = "additional_infor:train_emotion_polarity.csv"
 TRAIN_SCRIPT = "train_transcriptions.json"
-TEST_SCRIPT = "test_transcriptions.json"
+TEST_SCRIPT = "transcriptions.json"
 SAMPLE_SUBMISSION = "results.csv"
-OUTPUT_DIR = "outputs"
 
 GCS_DS_PATH = None
 # GCS_DS_PATH = 'gs://kds-1dbcc2e911f8e605b6311dc9c69ebd6ecb338b28ee58c2088ee88e65'
@@ -30,4 +28,5 @@ LOAD_ARGS = [
     "lower",
     "text_separator",
     "n_hiddens",
+    "drop_rate",
 ]

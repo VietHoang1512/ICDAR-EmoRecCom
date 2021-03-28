@@ -36,10 +36,24 @@ print("Using Transformers version:", transformers.__version__)
 parser = argparse.ArgumentParser(description="ICDAR 2021: Multimodal Emotion Recognition on Comics scenes (EmoRecCom)")
 
 parser.add_argument(
-    "--data_dir",
+    "--train_dir",
     type=str,
-    default="data",
-    help="path to the download train data directory",
+    default="data/public_train",
+    help="path to the train data directory to train model",
+)
+
+parser.add_argument(
+    "--test_dir",
+    type=str,
+    default="data/private_test",
+    help="path to the test data directory to predict",
+)
+
+parser.add_argument(
+    "--output_dir",
+    type=str,
+    default="outputs",
+    help="path to directory for models saving",
 )
 
 parser.add_argument(
@@ -146,6 +160,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--drop_rate",
+    default=0.1,
+    type=float,
+    help="drop out rate for both images and text encoders",
+)
+
+parser.add_argument(
     "--lr",
     default=3e-5,
     type=float,
@@ -187,8 +208,10 @@ if __name__ == "__main__":
     print_signature()
 
     # setup working directory
-    experiment = f"{args.image_model}_{args.image_size}_{args.bert_model}_{args.max_len}_{args.n_hiddens}"
-    OUTPUT_DIR = os.path.join(constant.OUTPUT_DIR, experiment)
+    experiment = (
+        f"{args.image_model}_{args.image_size}_{args.bert_model}_{args.max_len}_{args.n_hiddens}_{args.drop_rate}"
+    )
+    OUTPUT_DIR = os.path.join(args.output_dir, experiment)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     logger = custom_logger(logging_dir=OUTPUT_DIR)
@@ -210,78 +233,53 @@ if __name__ == "__main__":
     else:
         logger.warning("Kaggle enviroment is not available, use local storage instead")
 
-    # Adapt working directory
-    TRAIN_IMAGE_DIR = os.path.join(args.data_dir, constant.TRAIN_IMAGE_DIR)
-    TEST_IMAGE_DIR = os.path.join(args.data_dir, constant.TEST_IMAGE_DIR)
-    TRAIN_LABELS = os.path.join(args.data_dir, constant.TRAIN_LABELS)
-    TRAIN_POLARITY = os.path.join(args.data_dir, constant.TRAIN_POLARITY)
-    TRAIN_SCRIPT = os.path.join(args.data_dir, constant.TRAIN_SCRIPT)
-    TEST_SCRIPT = os.path.join(args.data_dir, constant.TEST_SCRIPT)
-    SAMPLE_SUBMISSION = os.path.join(args.data_dir, constant.SAMPLE_SUBMISSION)
-    TARGET_COLS = args.target_cols
-    TARGET_SIZE = len(TARGET_COLS)
-
     GPUS = ",".join([str(gpu) for gpu in args.gpus])
     os.environ["CUDA_VISIBLE_DEVICES"] = GPUS
-
-    train_polarity = pd.read_csv(TRAIN_POLARITY, index_col=0)
-    train_labels = pd.read_csv(TRAIN_LABELS, index_col=0)
-    with open(TRAIN_SCRIPT, "r") as f:
-        train_script_json = json.load(f)
-
-    sample_submission = pd.read_csv(SAMPLE_SUBMISSION, index_col=0, header=None, names=["image_id"] + constant.ALL_COLS)
-    with open(TEST_SCRIPT, "r") as f:
-        test_script_json = json.load(f)
-
-    train_script = pd.DataFrame(train_script_json)
-    test_script = pd.DataFrame(test_script_json)
-
-    train_script = train_script.rename(columns={"img_id": "image_id"})
-    test_script = test_script.rename(columns={"img_id": "image_id"})
-
-    train_no_script = pd.merge(train_labels, train_polarity, on="image_id")
-    train_non_processed = pd.merge(train_no_script, train_script, on="image_id")
-    test_non_processed = pd.merge(sample_submission, test_script, on="image_id")
-
-    train_processed = process_dialog(
-        process_emotion_polarity(
-            add_file_path(df=train_non_processed, image_dir=TRAIN_IMAGE_DIR, gcs_ds_path=constant.GCS_DS_PATH)
-        ),
-        lower=args.lower,
-        text_separator=args.text_separator,
-    )
-    test_processed = process_dialog(
-        add_file_path(df=test_non_processed, image_dir=TEST_IMAGE_DIR, gcs_ds_path=constant.GCS_DS_PATH),
-        lower=args.lower,
-        text_separator=args.text_separator,
-    )
-
-    # for data analysis purpose
-    with open("train.txt", "w") as f:
-        for index, row in train_processed.iterrows():
-            f.write(f"\n{index} {row['image_id']} \n")
-            for col in constant.ALL_COLS:
-                f.write(f"{col} {row[col]} | ")
-            f.write(f"\nText: {row['text']}\n")
-            f.write(f"Narration {row['narration']}\n")
-
-    with open("test.txt", "w") as f:
-        for index, row in test_processed.iterrows():
-            f.write(f"\n{index} {row['image_id']} \n")
-            for col in constant.ALL_COLS:
-                f.write(f"{col} {row[col]} | ")
-            f.write(f"\nText: {row['text']}\n")
-            f.write(f"Narration {row['narration']}\n")
-
-    # Get all text
-    train_texts = train_processed["text"].tolist()
-    test_texts = test_processed["text"].tolist()
-    all_texts = train_texts + test_texts
-
     strategy = select_strategy()
 
     if args.do_train:
         logger.info("Start training")
+
+        # Adapt working directory
+        TRAIN_IMAGE_DIR = os.path.join(args.train_dir, constant.IMAGE_DIR)
+        TRAIN_LABELS = os.path.join(args.train_dir, constant.TRAIN_LABELS)
+        TRAIN_POLARITY = os.path.join(args.train_dir, constant.TRAIN_POLARITY)
+        TRAIN_SCRIPT = os.path.join(args.train_dir, constant.TRAIN_SCRIPT)
+
+        TARGET_COLS = args.target_cols
+        TARGET_SIZE = len(TARGET_COLS)
+
+        train_polarity = pd.read_csv(TRAIN_POLARITY, index_col=0)
+        train_labels = pd.read_csv(TRAIN_LABELS, index_col=0)
+        with open(TRAIN_SCRIPT, "r") as f:
+            train_script_json = json.load(f)
+
+        train_script = pd.DataFrame(train_script_json)
+        train_script = train_script.rename(columns={"img_id": "image_id"})
+
+        train_no_script = pd.merge(train_labels, train_polarity, on="image_id")
+        train_non_processed = pd.merge(train_no_script, train_script, on="image_id")
+
+        train_processed = process_dialog(
+            process_emotion_polarity(
+                add_file_path(df=train_non_processed, image_dir=TRAIN_IMAGE_DIR, gcs_ds_path=constant.GCS_DS_PATH)
+            ),
+            lower=args.lower,
+            text_separator=args.text_separator,
+        )
+
+        # for data analysis purpose
+        with open("train.txt", "w") as f:
+            for index, row in train_processed.iterrows():
+                f.write(f"\n{index} {row['image_id']} \n")
+                for col in constant.ALL_COLS:
+                    f.write(f"{col} {row[col]} | ")
+                f.write(f"\nText: {row['text']}\n")
+                f.write(f"Narration {row['narration']}\n")
+
+        # Get all text
+        all_texts = train_processed["text"].tolist()
+
         WORD_EMBEDDING_MODEL = (
             os.path.splitext(os.path.basename(args.word_embedding))[0] if args.word_embedding else None
         )
@@ -335,6 +333,7 @@ if __name__ == "__main__":
             embedding_matrix=embedding_matrix,
             target_size=TARGET_SIZE,
             n_hiddens=args.n_hiddens,
+            drop_rate=args.drop_rate,
         )
         model.summary(print_fn=logger.info)
         tf.keras.utils.plot_model(model, to_file=OUTPUT_DIR + "/model.png")
@@ -355,6 +354,7 @@ if __name__ == "__main__":
                 embedding_matrix=embedding_matrix,
                 target_size=TARGET_SIZE,
                 n_hiddens=args.n_hiddens,
+                drop_rate=args.drop_rate,
             )
             model.compile(
                 tf.keras.optimizers.Adam(lr=args.lr),
@@ -418,6 +418,32 @@ if __name__ == "__main__":
 
     if args.do_infer:
 
+        TEST_IMAGE_DIR = os.path.join(args.test_dir, constant.IMAGE_DIR)
+        TEST_SCRIPT = os.path.join(args.test_dir, constant.TEST_SCRIPT)
+        SAMPLE_SUBMISSION = os.path.join(args.test_dir, constant.SAMPLE_SUBMISSION)
+
+        sample_submission = pd.read_csv(
+            SAMPLE_SUBMISSION, index_col=0, header=None, names=["image_id"] + constant.ALL_COLS
+        )
+        with open(TEST_SCRIPT, "r") as f:
+            test_script_json = json.load(f)
+
+        test_script = pd.DataFrame(test_script_json)
+        test_script = test_script.rename(columns={"img_id": "image_id"})
+        test_non_processed = pd.merge(sample_submission, test_script, on="image_id")
+        test_processed = process_dialog(
+            add_file_path(df=test_non_processed, image_dir=TEST_IMAGE_DIR, gcs_ds_path=constant.GCS_DS_PATH),
+            lower=args.lower,
+            text_separator=args.text_separator,
+        )
+        with open("test.txt", "w") as f:
+            for index, row in test_processed.iterrows():
+                f.write(f"\n{index} {row['image_id']} \n")
+                for col in constant.ALL_COLS:
+                    f.write(f"{col} {row[col]} | ")
+                f.write(f"\nText: {row['text']}\n")
+                f.write(f"Narration {row['narration']}\n")
+
         if not args.do_train:
             logger.info(f"Inferencing with models from {args.ckpt_dir}")
             logger.warning("The initial passing arguments with be overwriten with configuration from this checkpoint")
@@ -431,7 +457,8 @@ if __name__ == "__main__":
         config_info = "\n" + "*" * 50 + "\nGLOBAL CONFIGURATION\n"
 
         for arg in vars(args):
-            config_info += f"{arg} : { getattr(args, arg)}\n"
+            if arg in constant.LOAD_ARGS:
+                config_info += f"{arg} : { getattr(args, arg)}\n"
         config_info += "*" * 50
         logger.info(config_info)
 
@@ -457,6 +484,7 @@ if __name__ == "__main__":
             embedding_matrix=embedding_matrix,
             target_size=len(args.target_cols),
             n_hiddens=args.n_hiddens,
+            drop_rate=args.drop_rate,
         )
         model.summary(print_fn=logger.info)
         preds = []
@@ -498,12 +526,12 @@ if __name__ == "__main__":
             oof_preds.append(val_df)
         pred = np.mean(preds, axis=0)
         test_processed[TARGET_COLS] = pred
-        result_path = os.path.join(OUTPUT_DIR, "results.csv")
+        result_path = os.path.join(args.ckpt_dir, "results.csv")
         test_processed[["image_id"] + TARGET_COLS].to_csv(result_path, header=False)
-        test_path = os.path.join(OUTPUT_DIR, "test_pred.npy")
+        test_path = os.path.join(args.ckpt_dir, "test_pred.npy")
         with open(test_path, "wb") as f:
             np.save(f, test_processed[TARGET_COLS].values)
         oof_df = pd.DataFrame.sort_index(pd.concat(oof_preds, axis=0))
-        oof_path = os.path.join(OUTPUT_DIR, "oof_pred.npy")
+        oof_path = os.path.join(args.ckpt_dir, "oof_pred.npy")
         with open(oof_path, "wb") as f:
             np.save(f, oof_df[TARGET_COLS].values)

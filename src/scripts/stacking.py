@@ -5,24 +5,24 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold
-from utils import constant
+
+from src.utils import constant
 
 STACKING_DIR = constant.OUTPUT_DIR
 N_FOLDS = 5
+SEED = 1
 oof_df = pd.read_csv("data/train_5_folds.csv", index_col=0)
-test_df = pd.read_csv("data/results.csv", index_col=0, header=None, names=["image_id"] + constant.ALL_COLS)
+test_df = pd.read_csv(
+    "outputs/efn-b2_256_bert-base-cased_48_-1/results.csv",
+    index_col=0,
+    header=None,
+    names=["image_id"] + constant.ALL_COLS,
+)
 
 oof_pred_dfs = []
 test_pred_dfs = []
 
-EXPERIMENTS = [
-    "efn_b5_128_roberta-base_48_2",
-    "efn_b5_128_bert-base-cased_48",
-    "efn_b5_128_roberta-base_48",
-    "efn_b5_128_distilbert-base-uncased_48",
-    "efn_b5_128_roberta-base_64",
-    "efn_b5_128_bert-base-uncased_48",
-]  # os.listdir(STACKING_DIR)
+EXPERIMENTS = os.listdir(STACKING_DIR)
 
 for exp in EXPERIMENTS:
     oof_pred_fp = os.path.join(STACKING_DIR, exp, "oof_pred.npy")
@@ -54,15 +54,17 @@ for target_col in constant.ALL_COLS:
         [col for col in test_pred_df.columns if extract_column(col) == target_col]
     ]
 
-    kf = KFold(n_splits=N_FOLDS, shuffle=True, random_state=0)
+    kf = KFold(n_splits=N_FOLDS, shuffle=True, random_state=SEED)
     test_preds = []
     oof_scores = []
-    for fold_id, (train_idx, val_idx) in enumerate(kf.split(oof_df)):
+    for fold_id in range(N_FOLDS):
+        train_idx = oof_df[oof_df["fold"] != fold_id].index.tolist()
+        val_idx = oof_df[oof_df["fold"] == fold_id].index.tolist()
         X_train = oof_pred_df_single.iloc[train_idx]
         y_train = oof_df[target_col].iloc[train_idx]
         X_val = oof_pred_df_single.iloc[val_idx]
         y_val = oof_df[target_col].iloc[val_idx]
-        clf = LogisticRegression(C=0.05, n_jobs=4, penalty="l2")
+        clf = LogisticRegression(C=0.005, n_jobs=4, penalty="l2")
         clf.fit(X_train, y_train)
 
         val_pred = clf.predict_proba(X_val)[:, 1]
