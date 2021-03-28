@@ -1,4 +1,4 @@
-#!/bin
+#!/bin/bash
 
 # pip install -r requirements.txt
 
@@ -6,7 +6,7 @@
 data_dir="data"
 emb_dir="embeddings/"
 
-[[ -d $data_dir ]] || ((gdown --id 1OUd7dQybiioKMu7NXtWxIITdun8SaaUX) && (unzip data.zip ))
+[[ -d $data_dir ]] || ((gdown --id 1bofnf_jiELtKuSQfU8lXy6zDKutWUgzs) && (unzip data.zip ))
 [[ ! -f data.zip ]] || (rm data.zip)
 
 mkdir -p $emb_dir

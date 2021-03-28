@@ -1,4 +1,4 @@
-#!/bin
+#!/bin/bash
 export PYTHONPATH=$PWD
 
 emb_dir="embeddings/"

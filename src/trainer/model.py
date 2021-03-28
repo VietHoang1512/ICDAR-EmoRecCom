@@ -36,6 +36,7 @@ def build_model(
     image_size,
     target_size,
     max_word,
+    drop_rate,
     embedding_matrix=None,
 ):
     """
@@ -73,7 +74,8 @@ def build_model(
 
     if n_hiddens == -1:  # get [CLS] token embedding only
         bert_sequence_output = bert_sequence_output[0][:, 0, :]
-        # bert_sequence_output = bert_sequence_output[1]
+        bert_sequence_output = tf.keras.layers.Dropout(drop_rate)(bert_sequence_output)
+        bert_sequence_output = tf.keras.layers.Dense(32)(bert_sequence_output)
     else:  # concatenate n_hiddens final layer
         bert_sequence_output = tf.concat([bert_sequence_output[2][-i] for i in range(n_hiddens)], axis=-1)
         bert_sequence_output = tf.keras.layers.Flatten()(bert_sequence_output)
@@ -86,7 +88,9 @@ def build_model(
         image_model = get_image_model(image_model)
         image_input = tf.keras.layers.Input(shape=(image_size, image_size, 3), dtype=tf.float32, name="image_input")
         image_output = image_model(image_input)
+        image_output = tf.keras.layers.Dropout(drop_rate)(image_output)
         image_output = tf.keras.layers.GlobalAveragePooling2D()(image_output)
+        image_output = tf.keras.layers.Dense(32)(image_output)
         inputs.append(image_input)
         outputs.append(image_output)
 
