@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# pip install -r requirements.txt
-
+pip install -r requirements.txt
 
 data_dir="data"
 emb_dir="embeddings/"
@@ -9,9 +8,9 @@ emb_dir="embeddings/"
 [[ -d $data_dir ]] || ((gdown --id 1bofnf_jiELtKuSQfU8lXy6zDKutWUgzs) && (unzip data.zip ))
 [[ ! -f data.zip ]] || (rm data.zip)
 
-mkdir -p $emb_dir
+# mkdir -p $emb_dir
 
-[[ -f "$emb_dir/glove.840B.300d.pkl" ]] || (gdown --id 1-7SQ49tYL2STnSkVrgwXwd_wyKkt5oMF -O $emb_dir)
+# [[ -f "$emb_dir/glove.840B.300d.pkl" ]] || (gdown --id 1-7SQ49tYL2STnSkVrgwXwd_wyKkt5oMF -O $emb_dir)
 
 # [[ -f "$emb_dir/wiki.en.vec.pkl" ]] || (gdown --id 1-XwvKbEpZuIiLRK9O0Oa8OO8BnaC7LS9 -O $emb_dir)
 

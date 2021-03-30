@@ -1,6 +1,6 @@
 """
     This file contains the data directory structure and files format
-    https://drive.google.com/file/d/1OUd7dQybiioKMu7NXtWxIITdun8SaaUX/view
+    https://drive.google.com/file/d/1bofnf_jiELtKuSQfU8lXy6zDKutWUgzs/view?usp=sharing
 """
 
 IMAGE_DIR = "images"
@@ -29,4 +29,5 @@ LOAD_ARGS = [
     "text_separator",
     "n_hiddens",
     "drop_rate",
+    "target_cols",
 ]

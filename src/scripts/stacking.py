@@ -8,12 +8,12 @@ from sklearn.model_selection import KFold
 
 from src.utils import constant
 
-STACKING_DIR = constant.OUTPUT_DIR
+STACKING_DIR = "outputs"
 N_FOLDS = 5
 SEED = 1
-oof_df = pd.read_csv("data/train_5_folds.csv", index_col=0)
+oof_df = pd.read_csv("data/public_train/train_5_folds.csv", index_col=0)
 test_df = pd.read_csv(
-    "outputs/efn-b2_256_bert-base-cased_48_-1/results.csv",
+    "data/private_test/results.csv",
     index_col=0,
     header=None,
     names=["image_id"] + constant.ALL_COLS,
@@ -65,6 +65,7 @@ for target_col in constant.ALL_COLS:
         X_val = oof_pred_df_single.iloc[val_idx]
         y_val = oof_df[target_col].iloc[val_idx]
         clf = LogisticRegression(C=0.005, n_jobs=4, penalty="l2")
+        # clf = SVC(probability=True)
         clf.fit(X_train, y_train)
 
         val_pred = clf.predict_proba(X_val)[:, 1]

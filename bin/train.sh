@@ -11,13 +11,11 @@ embedding_dir="embeddings/"
 # word_embedding="$embedding_dir/glove.840B.300d.pkl"
 word_embedding=""
 
-image_model="efn-b1"
-
 python src/main.py \
     --train_dir=$train_dir \
     --target_cols angry disgust fear happy sad surprise neutral other \
-    --gpus 3 \
-    --image_model $image_model \
+    --gpus 2 \
+    --image_model efn-b2 \
     --bert_model roberta-base \
     --word_embedding=$word_embedding \
     --max_vocab 30000 \

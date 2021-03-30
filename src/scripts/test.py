@@ -5,26 +5,20 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold
-from utils.constant import *
+
+from src.utils.constant import *
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
-STACKING_DIR = "data/stacking"
+STACKING_DIR = "outputs"
 N_FOLDS = 5
-oof_df = pd.read_csv("data/train_5_folds.csv", index_col=0)
-test_df = pd.read_csv("data/results.csv", index_col=0, header=None, names=["image_id"] + ALL_COLS)
+oof_df = pd.read_csv("data/public_train/train_5_folds.csv", index_col=0)
+test_df = pd.read_csv("data/private_test/results.csv", index_col=0, header=None, names=["image_id"] + ALL_COLS)
 
 oof_pred_dfs = []
 test_pred_dfs = []
 
-EXPERIMENTS = [
-    "efn_b5_128_roberta-base_48_2",
-    "efn_b5_128_bert-base-cased_48",
-    "efn_b5_128_roberta-base_48",
-    "efn_b5_128_distilbert-base-uncased_48",
-    "efn_b5_128_roberta-base_64",
-    "efn_b5_128_bert-base-uncased_48",
-]
+EXPERIMENTS = os.listdir(STACKING_DIR)
 
 for exp in EXPERIMENTS:
     oof_pred_fp = os.path.join(STACKING_DIR, exp, "oof_pred.npy")
@@ -63,12 +57,19 @@ params_cat = {
 
 params_lgb = {
     "objective": "binary",
-    "metric": "auc",
-    "learning_rate": 0.05,
-    "num_leaves": 16,
-    "max_bin": 256,
-    "verbosity": 0,
-    "force_col_wise": True,
+    "metrics": "auc",
+    # 'n_estimators': 10000,
+    "learning_rate": 0.01,
+    "num_leaves": 8,
+    "max_depth": 7,
+    "min_child_samples": 20,
+    "subsample": 0.3,
+    "colsample_bytree": 0.5,
+    "reg_alpha": 0.1,
+    "reg_lambda": 0.1,
+    "verbosity": -1,
+    "n_jobs": 4,
+    "random_state": 0,
 }
 
 multi_auc_scores = []
@@ -82,7 +83,9 @@ for target_col in ALL_COLS:
     kf = KFold(n_splits=N_FOLDS, shuffle=True, random_state=0)
     test_preds = []
     oof_scores = []
-    for fold_id, (train_idx, val_idx) in enumerate(kf.split(oof_df)):
+    for fold_id in range(N_FOLDS):
+        train_idx = oof_df[oof_df["fold"] != fold_id].index.tolist()
+        val_idx = oof_df[oof_df["fold"] == fold_id].index.tolist()
         X_train = oof_pred_df_single.iloc[train_idx]
         y_train = oof_df[target_col].iloc[train_idx]
         X_val = oof_pred_df_single.iloc[val_idx]
@@ -118,7 +121,7 @@ for target_col in ALL_COLS:
         test_preds.append(test_pred)
         oof_score = roc_auc_score(y_val, val_pred)
         oof_scores.append(oof_score)
-        print(f"FOLD {fold_id} {oof_score}")
+        # print(f"FOLD {fold_id} {oof_score}")
     target_column_score = np.mean(oof_scores)
     print("TARGET COLUMN SCORE: ", target_column_score)
     multi_auc_scores.append(target_column_score)
