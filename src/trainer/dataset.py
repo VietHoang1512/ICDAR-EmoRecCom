@@ -1,4 +1,4 @@
-""" Main data generator class """
+"""Main data generator class """
 
 
 import numpy as np
@@ -65,7 +65,6 @@ class ICDARGenerator(tf.keras.utils.Sequence):
 
     def __getitem__(self, idx):
         """Generate one batch of data."""
-
         indexes = self.indexes[idx * self.batch_size : (idx + 1) * self.batch_size]
 
         labels = np.array([self.labels[k] for k in indexes])

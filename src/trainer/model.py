@@ -1,4 +1,4 @@
-""" EmoRecCom model """
+"""EmoRecCom model."""
 
 import efficientnet.keras as efn
 import tensorflow as tf
@@ -6,7 +6,8 @@ from transformers import TFAutoModel
 
 
 def get_image_model(image_model: str):
-    """Get Keras image model by name
+    """
+    Get Keras image model by name
 
     Args:
         image_model (str): Pretrained image model name

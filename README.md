@@ -11,7 +11,7 @@
 </div>
 
 ## Overview
-- This is the code for #1 solution for EmoRecCom (Tensorflow 2.0 version)
+- This is the code for EmoRecCom #1 solution (Tensorflow 2.0 version)
 - For usage of this code, please follow [here](src/README.md)
 - The ensemble models (TF + Pytorch) achieved 0.685 in the private leaderboard
 
