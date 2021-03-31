@@ -7,8 +7,7 @@ from sklearn.model_selection import KFold
 
 
 def kfold_split(train_df, n_folds):
-    """
-    K-fold split data for further comparation
+    """K-fold split data for further comparation
 
     Args:
         train_df (DataFrame): train dataframe

@@ -8,8 +8,7 @@ import seaborn as sns
 
 
 def length_plot(lengths: List[int]) -> None:
-    """
-    Plot the sequence length statistic
+    """Plot the sequence length statistic
 
     Args:
         lengths (List): Sequence lengths (by word or character)
@@ -26,8 +25,7 @@ def length_plot(lengths: List[int]) -> None:
 
 
 def get_embedding_matrix(word_index: Dict[str, Any], max_vocab: int, embedding_fp: str, lower: bool):
-    """
-    Generate embedding matrix with the provided word index
+    """Generate embedding matrix with the provided word index
 
     Args:
         word_index (Dict[str, Any]): A dictionary map word to vector

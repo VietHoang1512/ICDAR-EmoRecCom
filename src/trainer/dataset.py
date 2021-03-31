@@ -9,9 +9,7 @@ import tensorflow as tf
 
 class ICDARGenerator(tf.keras.utils.Sequence):
 
-    """
-    Data Generator for Keras model
-    """
+    """Data Generator for Keras model"""
 
     def __init__(
         self,
@@ -60,22 +58,16 @@ class ICDARGenerator(tf.keras.utils.Sequence):
         self.on_epoch_end()
 
     def on_epoch_end(self):
-        """
-        Updates indexes after each epoch
-        """
+        """Updates indexes after each epoch"""
         if self.shuffle:
             np.random.shuffle(self.indexes)
 
     def __len__(self):
-        """
-        Denotes the number of batches per epoch
-        """
+        """Denotes the number of batches per epoch"""
         return int(np.floor(self.total / self.batch_size))
 
     def __getitem__(self, idx):
-        """
-        Generate one batch of data
-        """
+        """Generate one batch of data"""
 
         indexes = self.indexes[idx * self.batch_size : (idx + 1) * self.batch_size]
 
