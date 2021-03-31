@@ -11,7 +11,7 @@
 </div>
 
 ## Overview
-- This is the code for my submission of to EmoRecCom leaderboard. It is implemented under Tensorflow 2.0 framework
+- This is the code for #1 solution for EmoRecCom (Tensorflow 2.0 version)
 - For usage of this code, please follow [here](src/README.md)
 - The ensemble models (TF + Pytorch) achieved 0.685 in the private leaderboard
 
@@ -54,8 +54,42 @@
 Running `setup.sh` also installs the dependencies
 ## Train & inference
 - Example bash scripts for training and inference are `train.sh` and `infer.sh`
-- In addition, we perform [stacking](src/scripts/stacking.py) by Logistic Regression, require out-of-fold along with test prediction
+### Train example
+```sh
+python src/main.py \
+    --train_dir=$data/public_train \
+    --target_cols angry disgust fear happy sad surprise neutral other \
+    --gpus 0,1,2 \
+    --image_model efn-b2 \
+    --bert_model roberta-base \
+    --word_embedding embeddings/glove.840B.300d.pkl \
+    --max_vocab 30000 \
+    --image_size 256 \
+    --max_word 36 \
+    --max_len 48 \
+    --text_separator " " \
+    --n_hiddens -1 \
+    --lr 0.00003 \
+    --n_epochs 5 \
+    --seed 1710 \
+    --do_train \
+    --lower \
+```
+
+### Inference example
+
+```sh
+python src/main.py \
+    --test_dir data/private_test \
+    --target_cols angry disgust fear happy sad surprise neutral other \
+    --gpus 1 \
+    --ckpt_dir outputs/efn-b2_256_roberta-base_48_-1_0.1/ \
+    --do_infer \
+```
+- In addition, we perform [stacking](src/scripts/stacking.py) by Logistic Regression, requires out-of-fold along with test prediction
+
 ## Outputs
 - Folder contains all TF [experiments](https://drive.google.com/drive/folders/1mfeWRV9-yfmcbIWgLWLBKblM1-cPaWOi?usp=sharing)
+
 ## Reproducing:
 - Best single model (0.676 ROC-AUC) [configuration](assets/config.yaml)
