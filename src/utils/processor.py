@@ -1,6 +1,4 @@
-"""
-    Data processing module
-"""
+""" Data processing module."""
 
 
 import math

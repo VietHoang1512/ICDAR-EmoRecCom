@@ -1,6 +1,4 @@
-"""
-    EmoRecCom model
-"""
+""" EmoRecCom model """
 
 import efficientnet.keras as efn
 import tensorflow as tf
@@ -39,8 +37,8 @@ def build_model(
     drop_rate,
     embedding_matrix=None,
 ):
-    """ICDAR multimodal model for mixed image and dialog data
-
+    """
+    ICDAR multimodal model for mixed image and dialog data
     NOTE : https://arxiv.org/pdf/1905.12681.pdf
     """
 

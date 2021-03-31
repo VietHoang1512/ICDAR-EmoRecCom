@@ -8,7 +8,8 @@ import tensorflow as tf
 
 
 def parse_experiment(experiment: str) -> Dict:
-    """Parse experiment name into kwargs for alignment between train-infer
+    """
+    Parse experiment name into kwargs for alignment between train-infer
 
     Args:
         experiment (str): Name of the experiment directory
@@ -23,7 +24,8 @@ def parse_experiment(experiment: str) -> Dict:
 
 
 def select_strategy():
-    """Auto select device to run in (TPU or GPU) & Restrict reserving all GPU RAM in tensorflow
+    """
+    Auto select device to run in (TPU or GPU) & Restrict reserving all GPU RAM in tensorflow
 
     Returns:
         stragegy: strategy for training
@@ -51,7 +53,8 @@ def select_strategy():
 
 
 def seed_all(seed=1512):
-    """Set seed for reproducing result
+    """
+    Set seed for reproducing result
 
     Args:
         seed (int, optional): seed number. Defaults to 1512.
@@ -64,7 +67,8 @@ def seed_all(seed=1512):
 
 
 def scheduler(epoch: int) -> float:
-    """Learning rate scheduler by epoch
+    """
+    Learning rate scheduler by epoch
 
     Args:
         epoch (int): Epoch number

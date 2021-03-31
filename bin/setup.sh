@@ -3,11 +3,11 @@
 pip install -r requirements.txt
 
 data_dir="data"
-emb_dir="embeddings/"
 
 [[ -d $data_dir ]] || ((gdown --id 1bofnf_jiELtKuSQfU8lXy6zDKutWUgzs) && (unzip data.zip ))
 [[ ! -f data.zip ]] || (rm data.zip)
 
+# emb_dir="embeddings/"
 # mkdir -p $emb_dir
 
 # [[ -f "$emb_dir/glove.840B.300d.pkl" ]] || (gdown --id 1-7SQ49tYL2STnSkVrgwXwd_wyKkt5oMF -O $emb_dir)

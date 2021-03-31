@@ -6,13 +6,14 @@ import numpy as np
 
 
 def get_coefs(word: str, *arr):
-    """Get word-embedding line by line"""
+    """Get word-embedding line by line."""
     embedding_vector = np.asarray(arr, dtype="float32")
     return word, embedding_vector
 
 
 def cache_embedding(path: str):
-    """Load static embedding line by line and then save to pkl file
+    """
+    Load static embedding line by line and then save to pkl file
 
     Args:
         path (str): path to the static word embedding
