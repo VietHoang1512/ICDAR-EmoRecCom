@@ -1,71 +1,61 @@
 <div align="center">
 
-## [ICDAR 2021](https://icdar2021.org/program-2/competitions/) <img src="assets/icdar.png" alt="ICDAR 2021" width="25" height="15">
+# [ICDAR 2021](https://icdar2021.org/program-2/competitions/) <img src="assets/icdar.png" alt="ICDAR 2021" width="25" height="15">
 
-### [Multimodal Emotion Recognition on Comics scenes](https://competitions.codalab.org/competitions/27884)
+## [Multimodal Emotion Recognition on Comics scenes](https://competitions.codalab.org/competitions/27884)
+
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/1022cd5ee1a34cb8bea336adef0d7c26)](https://www.codacy.com/gh/VietHoang1710/EmoRecCom/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=VietHoang1710/EmoRecCom&amp;utm_campaign=Badge_Grade)
 
 </div>
 
-### 🏹 Usage:
+## Overview
+- This is the code for my submission of to EmoRecCom leaderboard. It is implemented under Tensorflow 2.0 framework
+- For usage of this code, please follow [here](src/README.md)
+- The ensemble models (TF + Pytorch) achieved 0.685 in the private leaderboard
+
+## Data preparation 
+
+### Competition data
+- The data folder is organized as presented in [here](src/utils/constant.py), you can also edit this file to adapt to your working directory (not recommended). Instead, this could be directly downloaded from drive by running `setup.sh`
+
+- The data directory by default is as follow:
 ```
-usage: main.py [-h] [--train_dir TRAIN_DIR] [--test_dir TEST_DIR]
-               [--output_dir OUTPUT_DIR]
-               [--target_cols TARGET_COLS [TARGET_COLS ...]]
-               [--gpus GPUS [GPUS ...]] [--do_train] [--do_infer]
-               [--ckpt_dir CKPT_DIR] [--image_model IMAGE_MODEL]
-               [--bert_model BERT_MODEL] [--word_embedding WORD_EMBEDDING]
-               [--max_vocab MAX_VOCAB] [--max_word MAX_WORD]
-               [--image_size IMAGE_SIZE] [--max_len MAX_LEN] [--lower]
-               [--text_separator TEXT_SEPARATOR] [--n_hiddens N_HIDDENS]
-               [--drop_rate DROP_RATE] [--lr LR] [--batch_size BATCH_SIZE]
-               [--n_epochs N_EPOCHS] [--kaggle] [--seed SEED]
-
-ICDAR 2021: Multimodal Emotion Recognition on Comics scenes (EmoRecCom)
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --train_dir TRAIN_DIR path to the train data directory to train model
-  --test_dir TEST_DIR   path to the test data directory to predict
-  --output_dir OUTPUT_DIR path to directory for models saving
-  --target_cols TARGET_COLS [TARGET_COLS ...]
-                        define columns for forecasting
-  --gpus GPUS [GPUS ...] select gpus to use
-  --do_train            whether train the pretrained model with provided train
-                        data
-  --do_infer            whether predict the provided test data with the
-                        trained models from checkpoint directory
-  --ckpt_dir CKPT_DIR   path to the directory containing checkpoints (.h5)
-                        models
-  --image_model IMAGE_MODEL pretrained image model name in list ['efn-b0',
-                        'efn-b1', 'efn-b2', 'efn-b3', 'efn-b4', 'efn-b5',
-                        'efn-b6', 'efn-b7'] None for using unimodal model
-  --bert_model BERT_MODEL
-                        path to pretrained bert model path or directory (e.g:
-                        https://huggingface.co/models)
-  --word_embedding WORD_EMBEDDING path to a pretrained static word embedding in list
-                        ['glove.840B.300d', 'wiki.en.vec',
-                        'crawl-300d-2M.vec', 'wiki-news-300d-1M.vec'] None for
-                        using bert model only to represent text
-  --max_vocab MAX_VOCAB maximum of word in the vocabulary (Tensorflow word
-                        tokenizer)
-  --max_word MAX_WORD   maximum word per text sample (Tensorflow word
-                        tokenizer)
-  --image_size IMAGE_SIZE size of image
-  --max_len MAX_LEN     max sequence length for padding and truncation (Bert
-                        word tokenizer)
-  --lower               whether lowercase text or not
-  --text_separator TEXT_SEPARATOR
-                        define separator to join conversations
-  --n_hiddens N_HIDDENS concatenate n_hiddens final layer to get sequence's
-                        bert embedding, -1 for using [CLS] token embedding
-                        only
-  --drop_rate DROP_RATE drop out rate for both images and text encoders
-  --lr LR               learning rate
-  --batch_size BATCH_SIZE
-                        num examples per batch
-  --n_epochs N_EPOCHS   num epochs required for training
-  --kaggle              whether using kaggle environment or not
-  --seed SEED           seed for reproceduce
+├── private_test
+│   ├── images
+│   ├── readme.md
+│   ├── results.csv
+│   └── transcriptions.json
+├── public_test
+│   ├── images
+│   ├── results.csv
+│   └── transcriptions.json
+└── public_train
+    ├── additional_infor:train_emotion_polarity.csv
+    ├── images
+    ├── readme.md
+    ├── train_5_folds.csv
+    ├── train_emotion_labels.csv
+    └── train_transcriptions.json
 ```
+### Additional data (optional)
+- In case you want to train a model with static word embeddings (word2vec, glove, fasttext, etc.). Download them by uncommenting the desired pretrained models you want in `setup.sh`. By default, static word embedding is not used in our approach
+- The provided static embedding models are in pickle file for easy loading, refer `prepare_data.sh` for more detail
 
-### 💪 [Outputs](https://drive.google.com/drive/folders/1mfeWRV9-yfmcbIWgLWLBKblM1-cPaWOi?usp=sharing)
+## Prerequisites
+- tensorflow
+- numpy
+- pandas
+- sklearn
+- transformers
+- efficientnet
+
+Running `setup.sh` also installs the dependencies
+## Train & inference
+- Example bash scripts for training and inference are `train.sh` and `infer.sh`
+- In addition, we perform [stacking](src/scripts/stacking.py) by Logistic Regression, require out-of-fold along with test prediction
+## Outputs
+- Folder contains all TF [experiments](https://drive.google.com/drive/folders/1mfeWRV9-yfmcbIWgLWLBKblM1-cPaWOi?usp=sharing)
+## Reproducing:
+- Best single model (0.676 ROC-AUC) [configuration](assets/config.yaml)

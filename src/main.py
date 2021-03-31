@@ -218,9 +218,10 @@ if __name__ == "__main__":
 
     config_info = "\n" + "*" * 50 + "\nGLOBAL CONFIGURATION\n"
     for arg in vars(args):
-        config_info += f"{arg} : { getattr(args, arg)}\n"
+        config_info += f"{arg} : { getattr(args, arg)}\n" if arg in constant.LOAD_ARGS else ""
     config_info += "*" * 50
     logger.info(config_info)
+    logger.info(f"Saving model checkpoints and logging to {OUTPUT_DIR}")
 
     with open(f"{OUTPUT_DIR}/config.yaml", "w") as file:
         yaml.dump(vars(args), file, indent=4)

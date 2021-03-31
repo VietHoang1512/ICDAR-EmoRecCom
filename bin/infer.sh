@@ -4,7 +4,7 @@ export PYTHONPATH=$PWD
 
 test_dir="data/private_test"
 embedding_dir="embeddings/"
-ckpt_dir="outputs/efn-b1_256_roberta-base_48_-1/"
+ckpt_dir="outputs/efn-b2_256_roberta-base_48_-1_0.1/"
 
 # word_embedding="$embedding_dir/wiki.en.pkl"
 # word_embedding="$embedding_dir/wiki-news-300d-1M.pkl"

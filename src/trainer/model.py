@@ -8,8 +8,8 @@ from transformers import TFAutoModel
 
 
 def get_image_model(image_model: str):
-    """
-    Get Keras image model by name
+    """Get Keras image model by name
+
     Args:
         image_model (str): Pretrained image model name
     Returns:
@@ -39,8 +39,8 @@ def build_model(
     drop_rate,
     embedding_matrix=None,
 ):
-    """
-    ICDAR multimodal model for mixed image and dialog data
+    """ICDAR multimodal model for mixed image and dialog data
+
     NOTE : https://arxiv.org/pdf/1905.12681.pdf
     """
 

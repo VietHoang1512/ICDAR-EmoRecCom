@@ -15,8 +15,7 @@ tqdm.pandas()
 
 
 def process_emotion_polarity(df, prefix: str = "prob_"):
-    """
-    Exploding the emotion column of data
+    """Exploding the emotion column of data
 
     Args:
         df (DataFrame): data
@@ -38,8 +37,7 @@ def process_emotion_polarity(df, prefix: str = "prob_"):
 
 
 def process_dialog(df, lower=True, text_separator=" "):
-    """
-    Simple dialog processing
+    """Simple dialog processing
 
     Args:
         df (DataFrame): data
@@ -48,8 +46,7 @@ def process_dialog(df, lower=True, text_separator=" "):
     """
 
     def text_normalize(text: str) -> str:
-        """
-        Simple text pre-processing
+        """Simple text pre-processing
 
         Args:
             text (str): raw text
@@ -92,8 +89,8 @@ def process_dialog(df, lower=True, text_separator=" "):
         return text
 
     def join_conversation(conversation: List) -> str:
-        """
-        Join conversations with text separator
+        """Join conversations with text separator
+
         Args:
             conversation (List): dialogues in a comic frame
 
@@ -114,8 +111,7 @@ def process_dialog(df, lower=True, text_separator=" "):
 
 
 def add_file_path(df, image_dir: str, gcs_ds_path: str):
-    """
-    Add file path to image filenames
+    """Add file path to image filenames
 
     Args:
         df (DataFrame): data
