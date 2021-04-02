@@ -344,19 +344,18 @@ if __name__ == "__main__":
             logger.info("*" * 100)
             logger.info(f"FOLD: {fold+1}/{len(folds)}")
             K.clear_session()
-            #     with strategy.scope():
-            #         model = build_model()
-            model = build_model(
-                image_model=args.image_model,
-                bert_model=args.bert_model,
-                image_size=args.image_size,
-                max_len=args.max_len,
-                max_word=args.max_word,
-                embedding_matrix=embedding_matrix,
-                target_size=TARGET_SIZE,
-                n_hiddens=args.n_hiddens,
-                drop_rate=args.drop_rate,
-            )
+            with strategy.scope():
+                model = build_model(
+                    image_model=args.image_model,
+                    bert_model=args.bert_model,
+                    image_size=args.image_size,
+                    max_len=args.max_len,
+                    max_word=args.max_word,
+                    embedding_matrix=embedding_matrix,
+                    target_size=TARGET_SIZE,
+                    n_hiddens=args.n_hiddens,
+                    drop_rate=args.drop_rate,
+                )
             model.compile(
                 tf.keras.optimizers.Adam(lr=args.lr),
                 loss="binary_crossentropy",

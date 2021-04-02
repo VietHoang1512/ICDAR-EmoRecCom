@@ -40,7 +40,7 @@
     └── train_transcriptions.json
 ```
 ### Additional data (optional)
-- In case you want to train a model with static word embeddings (word2vec, glove, fasttext, etc.). Download them by uncommenting the desired pretrained models you want in `setup.sh`. By default, static word embedding is not used in our approach
+- In case you want to train a model with static word embeddings (word2vec, glove, fasttext, etc.). Download them by uncommenting the desired pretrained models in `setup.sh`. By default, static word embedding is not used in our approach
 - The provided static embedding models are in pickle file for easy loading, refer `prepare_data.sh` for more detail
 
 ## Prerequisites
@@ -57,9 +57,9 @@ Running `setup.sh` also installs the dependencies
 ### Train example
 ```sh
 python src/main.py \
-    --train_dir=$data/public_train \
+    --train_dir data/public_train \
     --target_cols angry disgust fear happy sad surprise neutral other \
-    --gpus 0,1,2 \
+    --gpus 0 1 2 \
     --image_model efn-b2 \
     --bert_model roberta-base \
     --word_embedding embeddings/glove.840B.300d.pkl \
@@ -93,3 +93,10 @@ python src/main.py \
 
 ## Reproducing:
 - Best single model (0.676 ROC-AUC) [configuration](assets/config.yaml)
+
+## Contributors:
+
+- Nguyen Tien Long
+- Pham Tran Anh
+- Phan Viet Hoang
+- Vo Hong Sang
