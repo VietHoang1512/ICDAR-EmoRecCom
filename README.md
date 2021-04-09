@@ -6,7 +6,7 @@
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/1022cd5ee1a34cb8bea336adef0d7c26)](https://www.codacy.com/gh/VietHoang1710/EmoRecCom/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=VietHoang1710/EmoRecCom&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/1022cd5ee1a34cb8bea336adef0d7c26)](https://www.codacy.com/gh/VietHoang1512/ICDAR-EmoRecCom/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=VietHoang1512/ICDAR-EmoRecCom&amp;utm_campaign=Badge_Grade)
 
 </div>
 
@@ -93,10 +93,3 @@ python src/main.py \
 
 ## Reproducing:
 - Best single model (0.676 ROC-AUC) [configuration](assets/config.yaml)
-
-## Contributors:
-
-- Nguyen Tien Long
-- Pham Tran Anh
-- Phan Viet Hoang
-- Vo Hong Sang
