@@ -16,8 +16,7 @@
 - The ensemble models (TF + Pytorch) achieved 0.685 in the private leaderboard
 
 <div align="center">
-<br>
-<img src="assets/leaderboard.png" alt="Track 4 private leader board" width="700" height="400">
+<img src="assets/leaderboard.png" alt="Track 4 private leader board" width="600" height="240">
 </div>
 
 ## Data preparation 
@@ -99,11 +98,10 @@ python src/main.py \
 ## Reproducing:
 <div align="center">
 <br>
-<img src="assets/model.png" alt="Model achitecture" width="700" height="400">
+<img src="assets/model.png" alt="Model achitecture" width="700" height="290">
 <br>
 </div>
 
 - Technical [report](https://docs.google.com/presentation/d/1ioExeoDKOnT2KIPHeY3bt3Hfj5AOPdu2AXejgbTtEoE/edit?usp=sharing) 
   
 - Best single model (0.676 ROC-AUC) [configuration](assets/config.yaml)
-

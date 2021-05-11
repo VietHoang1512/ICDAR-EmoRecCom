@@ -19,13 +19,13 @@ python scripts/prepare_embedding.py \
 rm "$emb_dir/wiki-news-300d-1M.vec"
 
 wget https://dl.fbaipublicfiles.com/fasttext/vectors-wiki/wiki.en.vec -P $emb_dir
-scripts/prepare_embedding.py \
+python scripts/prepare_embedding.py \
     -i "$emb_dir/wiki.en.vec"
 rm $emb_dir/wiki.en.vec
 
 wget http://nlp.stanford.edu/data/glove.840B.300d.zip
 unzip glove.840B.300d.zip -d $emb_dir
 rm glove.840B.300d.zip
-scripts/prepare_embedding.py \
+python scripts/prepare_embedding.py \
     -i "emb_dir/glove.840B.300d.txt"
 rm "$emb_dir/glove.840B.300d.txt"
