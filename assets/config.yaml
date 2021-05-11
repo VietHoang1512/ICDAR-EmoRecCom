@@ -1,11 +1,11 @@
 batch_size: 32
 bert_model: roberta-base
-ckpt_dir: null
+ckpt_dir:
 do_infer: false
 do_train: true
 drop_rate: 0.1
 gpus:
-- '2'
+  - 0
 image_model: efn-b2
 image_size: 256
 kaggle: false
@@ -19,15 +19,15 @@ n_hiddens: -1
 output_dir: outputs
 seed: 1710
 target_cols:
-- angry
-- disgust
-- fear
-- happy
-- sad
-- surprise
-- neutral
-- other
+  - angry
+  - disgust
+  - fear
+  - happy
+  - sad
+  - surprise
+  - neutral
+  - other
 test_dir: data/private_test
 text_separator: ' '
 train_dir: data/public_train
-word_embedding: ''
+word_embedding: ""

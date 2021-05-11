@@ -15,6 +15,11 @@
 - For usage of this code, please follow [here](src/README.md)
 - The ensemble models (TF + Pytorch) achieved 0.685 in the private leaderboard
 
+<div align="center">
+<br>
+<img src="assets/leaderboard.png" alt="Track 4 private leader board" width="700" height="400">
+</div>
+
 ## Data preparation 
 
 ### Competition data
@@ -89,7 +94,16 @@ python src/main.py \
 - In addition, we perform [stacking](src/scripts/stacking.py) by Logistic Regression, requires out-of-fold along with test prediction
 
 ## Outputs
-- Folder contains all TF [experiments](https://drive.google.com/drive/folders/1mfeWRV9-yfmcbIWgLWLBKblM1-cPaWOi?usp=sharing)
+- Folder containing all TF [experiments](https://drive.google.com/drive/folders/1mfeWRV9-yfmcbIWgLWLBKblM1-cPaWOi?usp=sharing)
 
 ## Reproducing:
+<div align="center">
+<br>
+<img src="assets/model.png" alt="Model achitecture" width="700" height="400">
+<br>
+</div>
+
+- Technical [report](https://docs.google.com/presentation/d/1ioExeoDKOnT2KIPHeY3bt3Hfj5AOPdu2AXejgbTtEoE/edit?usp=sharing) 
+  
 - Best single model (0.676 ROC-AUC) [configuration](assets/config.yaml)
+
