@@ -151,7 +151,7 @@ debug/
 *.PNG
 *.JPEG
 *.JPG
-*.PDF
+# *.PDF
 *.t7
 *.html
 output

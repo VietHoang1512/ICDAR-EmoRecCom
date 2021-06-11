@@ -102,6 +102,6 @@ python src/main.py \
 <br>
 </div>
 
-- Technical [report](https://docs.google.com/presentation/d/1ioExeoDKOnT2KIPHeY3bt3Hfj5AOPdu2AXejgbTtEoE/edit?usp=sharing) 
+- Technical report: [English](https://docs.google.com/presentation/d/1ioExeoDKOnT2KIPHeY3bt3Hfj5AOPdu2AXejgbTtEoE/edit?usp=sharing) / [Vietnamese](assets/ML_Report.pdf)
   
 - Best single model (0.676 ROC-AUC) [configuration](assets/config.yaml)
