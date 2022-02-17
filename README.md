@@ -6,14 +6,14 @@
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/1022cd5ee1a34cb8bea336adef0d7c26)](https://www.codacy.com/gh/VietHoang1512/ICDAR-EmoRecCom/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=VietHoang1512/ICDAR-EmoRecCom&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/4b2bb47d1499410cad4f148c4c09dbe4)](https://www.codacy.com/gh/VietHoang1512/ICDAR-EmoRecCom/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=VietHoang1512/ICDAR-EmoRecCom&amp;utm_campaign=Badge_Grade)
 
 </div>
 
 ## Overview
-- This is the code for EmoRecCom #1 solution (Tensorflow 2.0 version)
+- This is the code for EmoRecCom #1 solution (Tensorflow 2.0 version) 
 - For usage of this code, please follow [here](src/README.md)
-- The ensemble models (TF + Pytorch) achieved 0.685 in the private leaderboard
+- The ensemble models (TF + Pytorch) achieved 0.685 in the private leaderboard [[paper]](https://link.springer.com/chapter/10.1007/978-3-030-86337-1_51)
 
 <div align="center">
 <img src="assets/leaderboard.png" alt="Track 4 private leader board" width="600" height="240">
